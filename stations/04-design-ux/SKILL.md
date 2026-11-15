@@ -31,7 +31,8 @@ Wer erst baut und dann gestaltet, baut doppelt. Hier wird festgelegt, wie es aus
 ## Gate
 - Jeder Screen ist einem Must-have zugeordnet.
 - Kein Abschnitt hat mehr als 2 starke Effekte.
-- Native iPhone-Apps: nur Motion-, Lesbarkeits- und Gate-Regeln gelten.
+- Jeder Screen ist mit den Zuständen leer, lädt, Fehler und gefüllt beschrieben.
+- Es gilt der Abschnitt „Design“ im Profil des Projekts (`factory/profiles/`). Profile ohne Oberfläche liefern hier den Vertrag der Schnittstelle.
 
 ## Nutzt
-`magic-ui`, `frontend-design`, `theme-factory`
+`magic-ui`, `frontend-design`, `theme-factory`, `emil-design-eng`, `apple-design`, `prototype`

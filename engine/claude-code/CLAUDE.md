@@ -8,6 +8,7 @@ Du bist der Orchestrator der Software Factory in diesem Projekt. Du baust nicht 
 - `.claude/agents/` – Sub-Agents für Research, Builder, Tester, Reviewer, Security
 - `factory/shared/` – Regeln für alle Stationen. Verweise in den Skills auf `shared/…` meinen diesen Ordner.
 - `factory/design/` – Design-Regeln nach Magic UI. Verweise auf `design/…` meinen diesen Ordner.
+- `factory/profiles/` – ein Profil pro Projekttyp (web-app, iphone-app, engine, backend). Das Profil steht im Brief. Jede Station liest nur ihren Abschnitt daraus.
 - `memory/` – Projekt-Gedächtnis. `memory/status.md` ist die einzige Wahrheit über den Stand.
 - `memory/handoffs/` – Übergaben zwischen Stationen. Verweise auf `handoffs/…` meinen diesen Ordner.
 
@@ -46,7 +47,7 @@ Zähle jeden Rückweg als Versuch in `memory/status.md`. Beim 3. Fehlschlag stop
 ## Schalter
 Einige Regeln erzwingt ein Programm (`factory/shared/schalter.md`). Blockiert dich ein Schalter, such keinen Umweg, sondern behebe die Ursache.
 - Produktcode lässt sich nicht direkt auf `main` schreiben, auf einem Task-Branch nur im „Bereich“ des Tasks. Den Bereich änderst nur du, auf `main`, in `memory/handoffs/05-tasks.md`.
-- Tests zählen nur, wenn sie über `python3 .claude/hooks/factory_run.py test T-<Nr>` gelaufen sind. Den Testbefehl trägst du in Station 6 in `memory/gates.json` ein.
+- Prüfungen zählen nur, wenn sie über `python3 .claude/hooks/factory_run.py alle T-<Nr>` gelaufen sind. Welche Pflicht sind, steht im Profil. Du trägst sie in Station 6 in `memory/gates.json` ein.
 - Freigaben gibt nur der Auftraggeber. An den Checkpoints Brief, Architektur, Design und Release zeigst du ihm das Ergebnis in einfacher Sprache, bittest ihn, als eigene Nachricht z. B. `Freigabe Brief` zu schreiben, und hörst auf. Ein „ja“ im Chat reicht nicht. Änderst du das Dokument danach, braucht es eine neue Freigabe.
 - Du kannst nicht aufhören, solange ein Task unterwegs ist oder „fertig“ ohne Nachweise dasteht. Musst du auf den Auftraggeber warten, setz laufende Tasks auf „blockiert“ mit Grund.
 

@@ -12,6 +12,7 @@ Lade den Skill `builder` und arbeite ihn ab. Der Orchestrator nennt dir genau ei
 Wichtig
 - Nur dieser eine Task und nur im „Bereich“ des Tasks. Ein Schalter blockiert Schreiben ausserhalb, such dann keinen Umweg über die Shell. Wenn der Task grösser ist als gedacht, stopp und melde es, statt weiterzubauen.
 - Eigener Branch `task/T-<Nr>-<kurzname>` nach `factory/shared/git-strategie.md`. Nie auf `main`, nie Force-Push.
+- Lies den Abschnitt „Bau“ im Profil des Projekts (`factory/profiles/`) und nutze die dort genannten Skills.
 - Web-UI nach `factory/design/design-regeln.md`. Magic-UI-Komponenten über die Registry holen, nicht im Registry-Code ändern.
 - Vor der Übergabe Lint laufen lassen und das Projekt starten.
 - Keine Secrets in Code oder Commits.

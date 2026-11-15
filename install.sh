@@ -36,7 +36,7 @@ copy_skill() {
 mkdir -p "$ZIEL/.claude/skills" "$ZIEL/.claude/agents"
 
 # Stationen und übernommene Skills
-for d in "$FACTORY"/stations/*/ "$FACTORY"/vendor-skills/anthropic/*/ "$FACTORY"/vendor-skills/magic-ui/; do
+for d in "$FACTORY"/stations/*/ "$FACTORY"/vendor-skills/anthropic/*/ "$FACTORY"/vendor-skills/emilkowalski/*/ "$FACTORY"/vendor-skills/magic-ui/; do
   copy_skill "${d%/}"
 done
 
@@ -65,7 +65,7 @@ fi
 # Regeln und Design gehören der Factory und werden aktualisiert
 rm -rf "$ZIEL/factory"
 mkdir -p "$ZIEL/factory"
-cp -R "$FACTORY/shared" "$FACTORY/design" "$ZIEL/factory/"
+cp -R "$FACTORY/shared" "$FACTORY/design" "$FACTORY/profiles" "$ZIEL/factory/"
 cp "$FACTORY/VERSION" "$ZIEL/factory/FACTORY_VERSION"
 
 # Projekt-Gedächtnis nur anlegen, nie überschreiben
