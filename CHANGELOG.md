@@ -6,6 +6,11 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.5] – 2026-11-15
+
+### Geändert
+- README neu gestaltet, mit Banner, Abzeichen und einer Grafik der Linie (`docs/images/`)
+
 ## [0.0.4] – 2026-11-15
 
 ### Hinzugefügt
@@ -60,7 +65,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/atshv/banan/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/atshv/banan/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/atshv/banan/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/atshv/banan/compare/v0.0.1...v0.0.2
