@@ -42,15 +42,41 @@ software-factory/
 ├── shared/              Regeln, die für alle Stationen gelten
 ├── memory/              Vorlagen fürs Projekt-Gedächtnis
 ├── design/              Design-Regeln nach Magic UI
+├── engine/claude-code/  Motor: Orchestrator, Sub-Agents, Befehle, Sperren
+├── install.sh           Installiert die Factory in einen Projektordner
 └── vendor-skills/       Übernommene Skills von Anthropic und Magic UI (mit Lizenz)
 ```
 
 ## So startest du ein Projekt
 
-1. Ordner `memory/` ins neue Projekt-Repo kopieren.
-2. Orchestrator mit `shared/orchestrator.md` starten.
-3. Station 1 interviewt dich. Danach laufen die Stationen der Reihe nach.
-4. Du entscheidest nur an den Checkpoints (Brief, Architektur, Release) und wenn ein Task 3× scheitert.
+Der Motor ist Claude Code. Er liegt in `engine/claude-code/` und wird mit `install.sh` in dein Projekt kopiert.
+
+1. Factory einmal auf deinen Computer holen: `git clone https://github.com/atshv/banan`
+2. In den Ordner `banan` wechseln und das Projekt anlegen: `./install.sh ~/Projekte/meine-app`
+   Oder in Claude Code im Ordner `banan` eingeben: `/factory-neu ~/Projekte/meine-app`
+3. Im Projektordner Claude Code starten und `/factory-start` eingeben.
+4. Station 1 interviewt dich. Danach geht es mit `/factory-weiter` Station für Station weiter.
+5. Du entscheidest nur an den Checkpoints (Brief, Architektur, Design, Release) und wenn ein Task 3× scheitert.
+
+| Befehl | Was passiert |
+|---|---|
+| `/factory-start` | Neues Projekt, Interview für den Brief |
+| `/factory-weiter` | Weiter bis zum nächsten Checkpoint oder Problem |
+| `/factory-status` | Stand in einfacher Sprache |
+| `/factory-release` | Nächste Version ausliefern |
+
+`install.sh` kann jederzeit wieder laufen, um die Factory im Projekt zu aktualisieren. Dein Projekt-Gedächtnis, deine `settings.json` und eigene Abschnitte in `CLAUDE.md` bleiben dabei erhalten.
+
+### Was im Projekt landet
+```
+meine-app/
+├── CLAUDE.md            Anleitung für den Orchestrator
+├── .claude/skills/      15 Stationen, 4 Befehle, übernommene Skills
+├── .claude/agents/      Researcher, Builder, Tester, Reviewer, Security
+├── .claude/settings.json  Sperren (kein Force-Push, kein .env lesen, kein rm -rf)
+├── factory/             Regeln und Design-Vorgaben der Factory
+└── memory/              Projekt-Gedächtnis und Übergaben
+```
 
 ## Muster, die jeder Skill hier befolgt
 
