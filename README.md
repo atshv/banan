@@ -59,9 +59,9 @@ Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. 
 | | |
 |:--|:--|
 | 🌿 **Geschützter Hauptzweig**<br>Kein Produktcode direkt auf `main` | 📦 **Task-Bereich**<br>Ein Builder schreibt nur in den Ordnern seines Tasks |
-| ✅ **Echte Nachweise**<br>„Fertig“ gilt nur, wenn Typprüfung, Lint, Tests und Build aufgezeichnet und grün sind | 🙋 **Deine Freigabe**<br>Die KI kann sich nicht selbst freigeben |
+| ✅ **Echte Nachweise**<br>Tests scheitern zuerst und bestehen danach, dazu Typprüfung, Lint und Build, alles aufgezeichnet | 🙋 **Deine Freigabe**<br>Die KI kann sich nicht selbst freigeben |
 
-Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
+Dazu kommen ein gesperrter Vertrag für Schnittstellen, eine Grössengrenze pro Task und eine zweite Review bei heiklen Tasks. Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
 
 <details>
 <summary><b>📁 Was im Repo liegt</b></summary>

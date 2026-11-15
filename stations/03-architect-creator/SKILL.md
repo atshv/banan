@@ -15,8 +15,9 @@ Die Architektur ist der Bauplan. Builder halten sich daran, Reviewer prüfen dag
 1. Stack wählen, basierend auf der Research-Empfehlung.
 2. Module schneiden. Jedes Modul hat eine Aufgabe und eine klare Schnittstelle.
 3. Datenmodell festlegen (Tabellen oder Typen mit Feldern).
-4. Jede wichtige Entscheidung als ADR in `memory/decisions.md` eintragen.
-5. Dem Auftraggeber in einfacher Sprache zeigen (Checkpoint).
+4. Den Vertrag festlegen, also die Datentypen und Schnittstellen zwischen den Modulen, und in welchen Dateien er liegen wird (z. B. `src/contracts/`). Builder bauen später gegen ihn und dürfen ihn nicht still ändern.
+5. Jede wichtige Entscheidung als ADR in `memory/decisions.md` eintragen.
+6. Dem Auftraggeber in einfacher Sprache zeigen (Checkpoint).
 
 ## Output → `handoffs/03-architektur.md`
 ```
@@ -24,6 +25,7 @@ Die Architektur ist der Bauplan. Builder halten sich daran, Reviewer prüfen dag
 ## Stack
 ## Module (Name, Aufgabe, Schnittstelle)
 ## Datenmodell
+## Vertrag (Typen und Schnittstellen, mit Dateipfaden)
 ## Externe Dienste
 ## Ordnerstruktur
 ## Bewusst weggelassen

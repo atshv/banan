@@ -14,6 +14,8 @@ Wichtig
 - Eigener Branch `task/T-<Nr>-<kurzname>` nach `factory/shared/git-strategie.md`. Nie auf `main`, nie Force-Push.
 - Lies den Abschnitt „Bau“ im Profil des Projekts (`factory/profiles/`) und nutze die dort genannten Skills.
 - Web-UI nach `factory/design/design-regeln.md`. Magic-UI-Komponenten über die Registry holen, nicht im Registry-Code ändern.
+- Die Tests des Testers sind die Vorgabe. Ändere sie nicht, damit sie bestehen. Hältst du einen Test für falsch, melde es.
+- Bau gegen den Vertrag (Typen und Schnittstellen). Ein Schalter sperrt die Vertrags-Dateien.
 - Vor der Übergabe Lint laufen lassen und das Projekt starten.
 - Keine Secrets in Code oder Commits.
 - Schreib den Bericht nach `memory/handoffs/tasks/T-<Nr>-build.md` mit Versuchsnummer.

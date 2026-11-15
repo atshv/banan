@@ -18,7 +18,8 @@ Ohne festes Gerüst richtet jeder Builder-Agent das Projekt anders ein. Das füh
 5. CI anlegen, das bei jedem Push baut, lintet und testet.
 6. `memory/` ins Repo kopieren, `conventions.md` mit Namen und Ordnern füllen.
 7. Pflicht-Prüfungen aus dem Profil in `memory/gates.json` eintragen (Liste `pflicht` und je ein Befehl), an den gewählten Stack angepasst. Bei mehreren Profilen gilt die Summe. Der Tester startet sie später über `factory_run.py`.
-8. Prüfen, dass das leere Projekt startet und die CI grün ist.
+8. Die Vertrags-Dateien aus der Architektur anlegen und ihre Pfade in `memory/gates.json` unter `vertrag` eintragen, z. B. `"vertrag": ["src/contracts/"]`.
+9. Prüfen, dass das leere Projekt startet und die CI grün ist.
 
 ## Output → `handoffs/06-setup.md`
 ```

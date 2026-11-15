@@ -36,11 +36,12 @@ Gib jedem Sub-Agent nur die Dateien mit, die seine Station unter „Input“ nen
 
 ## Task-Schleife (Stationen 9 bis 12)
 Für jeden offenen Task aus `memory/handoffs/05-tasks.md`, in der Reihenfolge der Abhängigkeiten
-1. `factory-builder` baut auf eigenem Branch → `tasks/T-<Nr>-build.md`
-2. `factory-tester` testet → `tasks/T-<Nr>-test.md`. Rot → zurück zu 1.
-3. `factory-reviewer` prüft → du speicherst `tasks/T-<Nr>-review.md`. Abgelehnt → zurück zu 1.
-4. `factory-security` prüft → du speicherst `tasks/T-<Nr>-security.md`. Blockiert → zurück zu 1.
-5. Alles OK → Branch nach `main` mergen, Task in `memory/status.md` auf „fertig“.
+1. `factory-tester` schreibt auf dem Task-Branch die Tests und zeichnet den roten Lauf auf. Entfällt bei `Tests zuerst: nein`.
+2. `factory-builder` baut, bis die Tests bestehen → `tasks/T-<Nr>-build.md`
+3. `factory-tester` startet alle Pflicht-Prüfungen → `tasks/T-<Nr>-test.md`. Rot oder zu gross → zurück zu 2, bei „zu gross“ teilst du den Task.
+4. `factory-reviewer` prüft → du speicherst `tasks/T-<Nr>-review.md`. Bei `Heikel: ja` danach ein zweiter, frischer `factory-reviewer` als „zweite Review“ → `tasks/T-<Nr>-review2.md`. Abgelehnt → zurück zu 2.
+5. `factory-security` prüft → du speicherst `tasks/T-<Nr>-security.md`. Blockiert → zurück zu 2.
+6. Alles OK → Branch nach `main` mergen, Task in `memory/status.md` auf „fertig“.
 
 Zähle jeden Rückweg als Versuch in `memory/status.md`. Beim 3. Fehlschlag stoppst du diesen Task, setzt ihn auf „blockiert“ und fragst den Auftraggeber, ob er vereinfacht, anders gelöst oder gestrichen wird.
 
@@ -48,6 +49,7 @@ Zähle jeden Rückweg als Versuch in `memory/status.md`. Beim 3. Fehlschlag stop
 Einige Regeln erzwingt ein Programm (`factory/shared/schalter.md`). Blockiert dich ein Schalter, such keinen Umweg, sondern behebe die Ursache.
 - Produktcode lässt sich nicht direkt auf `main` schreiben, auf einem Task-Branch nur im „Bereich“ des Tasks. Den Bereich änderst nur du, auf `main`, in `memory/handoffs/05-tasks.md`.
 - Prüfungen zählen nur, wenn sie über `python3 .claude/hooks/factory_run.py alle T-<Nr>` gelaufen sind. Welche Pflicht sind, steht im Profil. Du trägst sie in Station 6 in `memory/gates.json` ein.
+- Der Vertrag (Dateien unter `vertrag` in `memory/gates.json`) ist für Builder gesperrt. Muss er sich ändern, frag den Auftraggeber und setz dann beim Task `Vertrag ändern: ja`.
 - Freigaben gibt nur der Auftraggeber. An den Checkpoints Brief, Architektur, Design und Release zeigst du ihm das Ergebnis in einfacher Sprache, bittest ihn, als eigene Nachricht z. B. `Freigabe Brief` zu schreiben, und hörst auf. Ein „ja“ im Chat reicht nicht. Änderst du das Dokument danach, braucht es eine neue Freigabe.
 - Du kannst nicht aufhören, solange ein Task unterwegs ist oder „fertig“ ohne Nachweise dasteht. Musst du auf den Auftraggeber warten, setz laufende Tasks auf „blockiert“ mit Grund.
 
