@@ -70,7 +70,7 @@ cp "$FACTORY/VERSION" "$ZIEL/factory/FACTORY_VERSION"
 
 # Projekt-Gedächtnis nur anlegen, nie überschreiben
 mkdir -p "$ZIEL/memory/handoffs/tasks"
-for f in "$FACTORY"/memory/*.md "$FACTORY"/memory/handoffs/README.md; do
+for f in "$FACTORY"/memory/*.md "$FACTORY"/memory/gates.json "$FACTORY"/memory/handoffs/README.md; do
   rel="${f#"$FACTORY"/}"
   [ -f "$ZIEL/$rel" ] || cp "$f" "$ZIEL/$rel"
 done
@@ -92,5 +92,5 @@ else
   { echo; cat "$ENGINE/CLAUDE.md"; } >> "$ZIEL/CLAUDE.md"
 fi
 
-echo "Software Factory $(cat "$FACTORY/VERSION") installiert in $ZIEL"
+echo "banan $(cat "$FACTORY/VERSION") installiert in $ZIEL"
 echo "Nächster Schritt: in diesem Ordner Claude Code starten und /factory-start eingeben."

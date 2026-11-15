@@ -2,14 +2,17 @@
 """Schalter der Software Factory fuer Claude Code.
 
 Aufruf durch Hooks in .claude/settings.json, Eingabe als JSON auf stdin:
-  factory_guard.py write   vor Write/Edit      -> Schreibsperre main, Task-Bereich
-  factory_guard.py bash    vor Bash            -> kein Commit von Produktcode auf main
+  factory_guard.py write   vor Write/Edit      -> Schreibsperre main, Task-Bereich, Freigaben
+  factory_guard.py bash    vor Bash            -> kein Commit von Produktcode auf main, kein Tag ohne Freigabe
   factory_guard.py stop    vor dem Aufhoeren   -> offene Tasks, fehlende Nachweise
+  factory_guard.py prompt  bei jeder Nachricht -> zeichnet "Freigabe <Checkpoint>" des Auftraggebers auf
 
 Exit 0 = erlaubt. Exit 2 = blockiert, der Text auf stderr geht an die KI.
 Bei einem eigenen Fehler laesst das Script alles durch, damit es nie die Arbeit lahmlegt.
 """
+import datetime
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -19,17 +22,34 @@ import sys
 MAIN = {"main", "master"}
 ADMIN_DIRS = ("memory/", "factory/", ".claude/")
 ADMIN_FILES = {"CLAUDE.md", "VERSION", "CHANGELOG.md", "README.md", ".gitignore", ".env.example", "LICENSE"}
-PROTECTED_DIRS = (".claude/hooks/",)
+RUNS = "memory/runs"
+APPROVALS = "memory/freigaben"
+PROTECTED_DIRS = (".claude/hooks/", RUNS + "/", APPROVALS + "/")
 PROTECTED_FILES = {".claude/settings.json"}
+RUNNER = ".claude/hooks/factory_run.py"
 LOCKFILES = {
     "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb",
     "Package.resolved", "Podfile.lock", "Gemfile.lock", "poetry.lock", "uv.lock", "Cargo.lock",
 }
 TASKS = "memory/handoffs/05-tasks.md"
+GATES = "memory/gates.json"
 STATUS = "memory/status.md"
 REPORTS = "memory/handoffs/tasks"
 ACTIVE = {"in arbeit", "test", "review", "security"}
 PASS = {"ok", "grün", "gruen"}
+
+# Checkpoint -> Datei, die der Auftraggeber freigibt
+CHECKPOINTS = {
+    "brief": "memory/handoffs/01-brief.md",
+    "architektur": "memory/handoffs/03-architektur.md",
+    "design": "memory/handoffs/04-design.md",
+}
+# Datei -> Checkpoint, der vorher freigegeben sein muss
+NEEDS = {
+    "memory/handoffs/02-research.md": "brief",
+    "memory/handoffs/04-design.md": "architektur",
+    TASKS: "design",
+}
 
 
 def git(root, *args):
@@ -55,6 +75,25 @@ def rel(root, cwd, path):
     return os.path.relpath(full, base).replace(os.sep, "/")
 
 
+def read(root, path):
+    try:
+        with open(os.path.join(root, path), encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def read_json(root, path):
+    try:
+        return json.loads(read(root, path) or "")
+    except ValueError:
+        return None
+
+
+def sha(text):
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def is_admin(r):
     return r in ADMIN_FILES or r.startswith(ADMIN_DIRS)
 
@@ -68,14 +107,63 @@ def task_no(name):
     return int(m.group(1)) if m else None
 
 
+# ---------- Freigaben ----------
+
+def version(root):
+    return (read(root, "VERSION") or "").strip()
+
+
+def approved(root, checkpoint):
+    """True, wenn der Auftraggeber genau den heutigen Stand der Datei freigegeben hat."""
+    record = read_json(root, f"{APPROVALS}/{checkpoint}.json")
+    current = read(root, CHECKPOINTS[checkpoint])
+    return bool(record) and current is not None and record.get("sha256") == sha(current)
+
+
+def release_approved(root):
+    v = version(root)
+    record = read_json(root, f"{APPROVALS}/release-{v}.json") if v else None
+    return bool(record) and record.get("version") == v
+
+
+def record_approval(root, prompt):
+    """Zeichnet 'Freigabe <Checkpoint>' auf. Gibt den Text fuer die KI zurueck oder None."""
+    m = re.match(r"\s*freigabe\s*:?\s+(brief|architektur|design|release)\s*[.!]?\s*$", prompt or "", re.I)
+    if not m:
+        return None
+    name = m.group(1).lower()
+    record = {"checkpoint": name, "zeit": datetime.datetime.now().astimezone().isoformat(timespec="seconds")}
+    if name == "release":
+        v = version(root)
+        if not v:
+            return "Freigabe nicht aufgezeichnet. Die Datei VERSION fehlt oder ist leer."
+        record["version"] = v
+        target = f"{APPROVALS}/release-{v}.json"
+        label = f"Release {v}"
+    else:
+        source = CHECKPOINTS[name]
+        text = read(root, source)
+        if text is None:
+            return f"Freigabe nicht aufgezeichnet. {source} gibt es noch nicht."
+        record.update(datei=source, sha256=sha(text))
+        target = f"{APPROVALS}/{name}.json"
+        label = name.capitalize()
+    os.makedirs(os.path.join(root, APPROVALS), exist_ok=True)
+    with open(os.path.join(root, target), "w", encoding="utf-8") as f:
+        json.dump(record, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+    return f"Factory: Freigabe '{label}' des Auftraggebers ist aufgezeichnet in {target}."
+
+
+# ---------- Schreiben ----------
+
 def scope(root, no):
     """Bereich eines Tasks aus 05-tasks.md, None wenn keiner eingetragen ist."""
-    try:
-        lines = open(os.path.join(root, TASKS), encoding="utf-8").read().splitlines()
-    except OSError:
+    text = read(root, TASKS)
+    if text is None:
         return None
     current = None
-    for line in lines:
+    for line in text.splitlines():
         h = re.match(r"#{1,6}\s*T-(\d+)\b", line)
         if h:
             current = int(h.group(1))
@@ -106,7 +194,13 @@ def check_write(root, cwd, path):
     if r is None:
         return None
     if is_protected(r):
-        return f"Factory-Schalter: {r} gehört zu den Schaltern der Factory. Nur der Auftraggeber ändert sie."
+        return (f"Factory-Schalter: {r} gehört zu den Schaltern und Nachweisen der Factory. "
+                "Die KI ändert sie nicht von Hand.")
+    need = NEEDS.get(r)
+    if need and not approved(root, need):
+        return (f"Factory-Schalter: {r} braucht zuerst die Freigabe '{need.capitalize()}' des Auftraggebers "
+                f"für den heutigen Stand von {CHECKPOINTS[need]}. Zeig ihm das Ergebnis in einfacher Sprache "
+                f"und bitte ihn, als eigene Nachricht 'Freigabe {need.capitalize()}' zu schreiben. Dann hör auf.")
     b = branch(root)
     if b is None:
         return None
@@ -118,8 +212,8 @@ def check_write(root, cwd, path):
     no = task_no(b)
     if no is None:
         return None
-    if r == TASKS:
-        return f"Factory-Schalter: {TASKS} wird nur auf main geändert, nicht auf einem Task-Branch."
+    if r in (TASKS, GATES):
+        return f"Factory-Schalter: {r} wird nur auf main geändert, nicht auf einem Task-Branch."
     if r.startswith("memory/") or os.path.basename(r) in LOCKFILES:
         return None
     entries = scope(root, no)
@@ -132,8 +226,25 @@ def check_write(root, cwd, path):
             "Bleib im Bereich. Braucht der Task wirklich mehr, stopp und melde es dem Orchestrator.")
 
 
+# ---------- Shell ----------
+
 def check_bash(root, command):
-    if not re.search(r"\bgit\b[^|;&\n]*\bcommit\b", command or ""):
+    command = command or ""
+    rest = command.replace(RUNNER, "")
+    for p in (".claude/hooks", ".claude/settings.json", RUNS, APPROVALS):
+        if p in rest:
+            return (f"Factory-Schalter: Shell-Befehle fassen {p} nicht an. Lies solche Dateien mit dem "
+                    f"Lese-Werkzeug. Testläufe zeichnet nur 'python3 {RUNNER} <gate> <T-Nr>' auf.")
+    tag = re.search(r"\bgit\b[^|;&\n]*?\btag\b([^|;&\n]*)", command)
+    if tag:
+        args = tag.group(1).split()
+        listing = {"-l", "--list", "-d", "--delete", "-n", "-v", "--verify", "--contains", "--points-at"}
+        if args and not listing.intersection(args) and not release_approved(root):
+            v = version(root) or "?"
+            return (f"Factory-Schalter: Für Version {v} fehlt die Freigabe 'Release' des Auftraggebers. "
+                    "Zeig ihm den Statusbericht und bitte ihn, als eigene Nachricht 'Freigabe Release' "
+                    "zu schreiben. Dann hör auf.")
+    if not re.search(r"\bgit\b[^|;&\n]*\bcommit\b", command):
         return None
     b = branch(root)
     if b not in MAIN:
@@ -152,6 +263,8 @@ def check_bash(root, command):
             "Nach main kommt Code nur per git merge.")
 
 
+# ---------- Aufhoeren ----------
+
 def reports(root):
     found = {}
     try:
@@ -159,29 +272,39 @@ def reports(root):
     except OSError:
         return found
     for name in names:
-        m = re.match(r"T-(\d+)-(build|test|review|security)\.md$", name, re.I)
+        m = re.match(r"T-(\d+)-(build|review|security)\.md$", name, re.I)
         if m:
-            found[(int(m.group(1)), m.group(2).lower())] = os.path.join(root, REPORTS, name)
+            found[(int(m.group(1)), m.group(2).lower())] = f"{REPORTS}/{name}"
     return found
 
 
-def passed(path):
+def test_runs(root):
+    """Aufgezeichnete Testlaeufe: Task-Nummer -> Exit-Code."""
+    found = {}
     try:
-        text = open(path, encoding="utf-8").read()
+        names = os.listdir(os.path.join(root, RUNS))
     except OSError:
-        return False
-    m = re.search(r"ergebnis\**\s*:\s*\**\s*([A-Za-zäöüÄÖÜ]+)", text, re.I)
+        return found
+    for name in names:
+        m = re.match(r"T-(\d+)-test\.json$", name, re.I)
+        record = read_json(root, f"{RUNS}/{name}") if m else None
+        if record is not None:
+            found[int(m.group(1))] = record.get("exit")
+    return found
+
+
+def passed(root, path):
+    m = re.search(r"ergebnis\**\s*:\s*\**\s*([A-Za-zäöüÄÖÜ]+)", read(root, path) or "", re.I)
     return bool(m) and m.group(1).lower() in PASS
 
 
 def check_stop(root):
-    try:
-        lines = open(os.path.join(root, STATUS), encoding="utf-8").read().splitlines()
-    except OSError:
+    text = read(root, STATUS)
+    if text is None:
         return None
-    found = reports(root)
+    found, runs = reports(root), test_runs(root)
     problems = []
-    for line in lines:
+    for line in text.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) < 3:
             continue
@@ -194,11 +317,16 @@ def check_stop(root):
         elif state == "fertig":
             if (no, "build") not in found:
                 problems.append(f"{label} steht auf 'fertig', aber der Build-Bericht fehlt.")
-            for kind, word in (("test", "Test"), ("review", "Review"), ("security", "Security")):
+            if no not in runs:
+                problems.append(f"{label} steht auf 'fertig', aber es gibt keinen aufgezeichneten Testlauf "
+                                f"(python3 {RUNNER} test {label}).")
+            elif runs[no] != 0:
+                problems.append(f"{label} steht auf 'fertig', aber der letzte aufgezeichnete Testlauf ist rot.")
+            for kind, word in (("review", "Review"), ("security", "Security")):
                 path = found.get((no, kind))
                 if path is None:
                     problems.append(f"{label} steht auf 'fertig', aber der {word}-Bericht fehlt.")
-                elif not passed(path):
+                elif not passed(root, path):
                     problems.append(f"{label} steht auf 'fertig', aber der {word}-Bericht ist nicht bestanden.")
     if not problems:
         return None
@@ -218,6 +346,11 @@ def main():
     root = os.environ.get("CLAUDE_PROJECT_DIR") or cwd
     tool = data.get("tool_input") or {}
     reason = None
+    if mode == "prompt":
+        note = record_approval(root, data.get("prompt"))
+        if note:
+            print(note)
+        return
     if mode == "write":
         reason = check_write(root, cwd, tool.get("file_path") or tool.get("notebook_path"))
     elif mode == "bash":

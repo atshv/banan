@@ -6,7 +6,9 @@ import sys
 import tempfile
 import unittest
 
-GUARD = os.path.join(os.path.dirname(__file__), "..", ".claude", "hooks", "factory_guard.py")
+HOOKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".claude", "hooks")
+GUARD = os.path.join(HOOKS, "factory_guard.py")
+RUNNER = os.path.join(HOOKS, "factory_run.py")
 
 TASKS = """# Tasks
 ## T-001: Login
@@ -136,12 +138,104 @@ class GuardTest(unittest.TestCase):
         self.write("memory/handoffs/tasks/T-001-build.md", "Task T-001")
         self.write("memory/handoffs/tasks/T-001-test.md", "Ergebnis: grün · Tests 4")
         self.write("memory/handoffs/tasks/T-001-review.md", "---\nergebnis: ok\n---")
-        self.write("memory/handoffs/tasks/T-001-security.md", "**Ergebnis:** abgelehnt")
-        code, err = self.run_guard("stop")
-        self.assertEqual(code, 2)
-        self.assertIn("Security", err)
         self.write("memory/handoffs/tasks/T-001-security.md", "**Ergebnis:** OK")
+        code, err = self.run_guard("stop")
+        self.assertEqual(code, 2, "ein Bericht 'grün' ohne aufgezeichneten Lauf reicht nicht")
+        self.assertIn("Testlauf", err)
+        self.write("memory/gates.json", json.dumps({"test": "exit 1"}))
+        self.assertEqual(self.run_runner("test", "T-001").returncode, 1)
+        self.assertIn("rot", self.run_guard("stop")[1])
+        self.write("memory/gates.json", json.dumps({"test": "echo alles gut"}))
+        self.assertEqual(self.run_runner("test", "T-001").returncode, 0)
         self.assertEqual(self.run_guard("stop")[0], 0)
+        self.write("memory/handoffs/tasks/T-001-security.md", "**Ergebnis:** abgelehnt")
+        self.assertIn("Security", self.run_guard("stop")[1])
+
+    # Aufgezeichnete Läufe
+    def run_runner(self, *args):
+        env = dict(os.environ, CLAUDE_PROJECT_DIR=self.root)
+        return subprocess.run([sys.executable, RUNNER, *args], capture_output=True, text=True, env=env, cwd=self.root)
+
+    def test_runner_records_result(self):
+        self.write("memory/gates.json", json.dumps({"test": "echo hallo && exit 3"}))
+        r = self.run_runner("test", "T-007")
+        self.assertEqual(r.returncode, 3)
+        with open(os.path.join(self.root, "memory/runs/T-007-test.json"), encoding="utf-8") as f:
+            record = json.load(f)
+        self.assertEqual((record["exit"], record["bestanden"], record["befehl"]), (3, False, "echo hallo && exit 3"))
+        self.assertIn("hallo", record["ausgabe_ende"])
+
+    def test_runner_needs_a_command(self):
+        self.assertEqual(self.run_runner("test", "T-001").returncode, 65)
+        self.assertEqual(self.run_runner("test", "kaputt").returncode, 64)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "memory/runs")))
+
+    def test_evidence_cannot_be_written_by_hand(self):
+        self.assertFalse(self.can_write("memory/runs/T-001-test.json"))
+        self.assertFalse(self.can_write("memory/freigaben/brief.json"))
+        bash = lambda c: self.run_guard("bash", tool_input={"command": c})[0]
+        self.assertEqual(bash("echo '{\"exit\":0}' > memory/runs/T-001-test.json"), 2)
+        self.assertEqual(bash("cp x memory/freigaben/brief.json"), 2)
+        self.assertEqual(bash("sed -i s/a/b/ .claude/hooks/factory_guard.py"), 2)
+        self.assertEqual(bash("python3 .claude/hooks/factory_run.py test T-001"), 0)
+        self.assertEqual(bash("python3 .claude/hooks/factory_run.py test T-001; rm memory/runs/x"), 2)
+
+    def test_gates_only_change_on_main(self):
+        self.commit()
+        self.assertTrue(self.can_write("memory/gates.json"))
+        sh(self.root, "checkout", "-q", "-b", "task/T-001-login")
+        self.assertFalse(self.can_write("memory/gates.json"))
+
+    # Freigaben
+    def say(self, text):
+        return self.run_guard("prompt", prompt=text)
+
+    def test_approval_gates_the_next_station(self):
+        self.write("memory/handoffs/01-brief.md", "Brief v1")
+        self.assertFalse(self.can_write("memory/handoffs/02-research.md"))
+        code, _ = self.say("Freigabe Brief, aber ändere noch den Titel")
+        self.assertEqual(code, 0)
+        self.assertFalse(self.can_write("memory/handoffs/02-research.md"), "nur die reine Freigabe zählt")
+        code, _ = self.say("Freigabe Brief")
+        self.assertEqual(code, 0)
+        self.assertTrue(self.can_write("memory/handoffs/02-research.md"))
+        self.write("memory/handoffs/01-brief.md", "Brief v2")
+        self.assertFalse(self.can_write("memory/handoffs/02-research.md"), "geänderter Brief braucht neue Freigabe")
+        self.say("freigabe: brief.")
+        self.assertTrue(self.can_write("memory/handoffs/02-research.md"))
+
+    def test_approval_needs_the_document(self):
+        r = subprocess.run([sys.executable, GUARD, "prompt"], input=json.dumps({"prompt": "Freigabe Design", "cwd": self.root}),
+                           capture_output=True, text=True, env=dict(os.environ, CLAUDE_PROJECT_DIR=self.root))
+        self.assertIn("nicht aufgezeichnet", r.stdout)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "memory/freigaben/design.json")))
+
+    def test_ordinary_messages_stay_silent(self):
+        r = subprocess.run([sys.executable, GUARD, "prompt"], input=json.dumps({"prompt": "mach weiter", "cwd": self.root}),
+                           capture_output=True, text=True, env=dict(os.environ, CLAUDE_PROJECT_DIR=self.root))
+        self.assertEqual((r.returncode, r.stdout, r.stderr), (0, "", ""))
+
+    def test_design_and_tasks_need_their_approvals(self):
+        self.write("memory/handoffs/03-architektur.md", "A")
+        self.write("memory/handoffs/04-design.md", "D")
+        self.assertFalse(self.can_write("memory/handoffs/04-design.md"))
+        self.assertFalse(self.can_write("memory/handoffs/05-tasks.md"))
+        self.say("Freigabe Architektur")
+        self.say("Freigabe Design")
+        self.assertTrue(self.can_write("memory/handoffs/04-design.md"))
+        self.assertTrue(self.can_write("memory/handoffs/05-tasks.md"))
+
+    def test_tag_needs_release_approval(self):
+        self.write("VERSION", "0.0.1\n")
+        bash = lambda c: self.run_guard("bash", tool_input={"command": c})[0]
+        self.assertEqual(bash("git tag v0.0.1"), 2)
+        self.assertEqual(bash("git tag -a v0.0.1 -m x && git push origin v0.0.1"), 2)
+        self.assertEqual(bash("git tag -l"), 0)
+        self.assertEqual(bash("git tag"), 0)
+        self.say("Freigabe Release")
+        self.assertEqual(bash("git tag v0.0.1"), 0)
+        self.write("VERSION", "0.0.2\n")
+        self.assertEqual(bash("git tag v0.0.2"), 2, "jede Version braucht ihre eigene Freigabe")
 
     def test_broken_input_never_blocks(self):
         r = subprocess.run([sys.executable, GUARD, "write"], input="kein json", capture_output=True, text=True)

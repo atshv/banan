@@ -44,7 +44,11 @@ Für jeden offenen Task aus `memory/handoffs/05-tasks.md`, in der Reihenfolge de
 Zähle jeden Rückweg als Versuch in `memory/status.md`. Beim 3. Fehlschlag stoppst du diesen Task, setzt ihn auf „blockiert“ und fragst den Auftraggeber, ob er vereinfacht, anders gelöst oder gestrichen wird.
 
 ## Schalter
-Drei Regeln erzwingt ein Programm (`factory/shared/schalter.md`). Produktcode lässt sich nicht direkt auf `main` schreiben, auf einem Task-Branch nur im „Bereich“ des Tasks, und du kannst nicht aufhören, solange ein Task unterwegs ist oder „fertig“ ohne Nachweise dasteht. Blockiert dich ein Schalter, such keinen Umweg, sondern behebe die Ursache. Den Bereich eines Tasks änderst nur du, auf `main`, in `memory/handoffs/05-tasks.md`. Musst du auf den Auftraggeber warten, setz laufende Tasks auf „blockiert“ mit Grund.
+Einige Regeln erzwingt ein Programm (`factory/shared/schalter.md`). Blockiert dich ein Schalter, such keinen Umweg, sondern behebe die Ursache.
+- Produktcode lässt sich nicht direkt auf `main` schreiben, auf einem Task-Branch nur im „Bereich“ des Tasks. Den Bereich änderst nur du, auf `main`, in `memory/handoffs/05-tasks.md`.
+- Tests zählen nur, wenn sie über `python3 .claude/hooks/factory_run.py test T-<Nr>` gelaufen sind. Den Testbefehl trägst du in Station 6 in `memory/gates.json` ein.
+- Freigaben gibt nur der Auftraggeber. An den Checkpoints Brief, Architektur, Design und Release zeigst du ihm das Ergebnis in einfacher Sprache, bittest ihn, als eigene Nachricht z. B. `Freigabe Brief` zu schreiben, und hörst auf. Ein „ja“ im Chat reicht nicht. Änderst du das Dokument danach, braucht es eine neue Freigabe.
+- Du kannst nicht aufhören, solange ein Task unterwegs ist oder „fertig“ ohne Nachweise dasteht. Musst du auf den Auftraggeber warten, setz laufende Tasks auf „blockiert“ mit Grund.
 
 ## Feste Regeln
 - Halte dich an `factory/shared/limits.md`. Ist ein Limit erreicht, stopp und melde es.

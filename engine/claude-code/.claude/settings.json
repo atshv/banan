@@ -24,6 +24,13 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/factory_guard.py\" prompt", "timeout": 15 }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
