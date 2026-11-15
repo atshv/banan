@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Schalter der Software Factory fuer Claude Code.
+"""Schalter von banan. Laeuft mit jeder KI, die Hooks kennt, und als Git-Hook mit allen anderen.
 
-Aufruf durch Hooks in .claude/settings.json, Eingabe als JSON auf stdin:
-  factory_guard.py write   vor Write/Edit      -> Schreibsperre main, Task-Bereich, Freigaben
-  factory_guard.py bash    vor Bash            -> kein Commit von Produktcode auf main, kein Tag ohne Freigabe
-  factory_guard.py stop    vor dem Aufhoeren   -> offene Tasks, fehlende Nachweise
-  factory_guard.py prompt  bei jeder Nachricht -> zeichnet "Freigabe <Checkpoint>" des Auftraggebers auf
+Aufruf durch die Hooks der jeweiligen KI, Eingabe als JSON auf stdin:
+  factory_guard.py write  [--ki NAME]  vor dem Schreiben    -> Schreibsperre main, Task-Bereich, Vertrag, Freigaben
+  factory_guard.py bash   [--ki NAME]  vor Shell-Befehlen   -> Commit auf main, Tag ohne Freigabe, geschuetzte Ordner
+  factory_guard.py stop   [--ki NAME]  vor dem Aufhoeren    -> offene Tasks, fehlende Nachweise
+  factory_guard.py prompt [--ki NAME]  bei jeder Nachricht  -> zeichnet "Freigabe <Checkpoint>" auf
+Ohne Hooks, fuer jede KI:
+  factory_guard.py commit              als Git pre-commit   -> dieselben Schreibregeln fuer alles, was committet wird
+  factory_guard.py pruefe              von Hand oder durch die KI -> dieselbe Pruefung wie stop
 
+NAME ist claude (Standard), cursor, gemini oder codex.
 Exit 0 = erlaubt. Exit 2 = blockiert, der Text auf stderr geht an die KI.
 Bei einem eigenen Fehler laesst das Script alles durch, damit es nie die Arbeit lahmlegt.
 """
@@ -20,13 +24,15 @@ import subprocess
 import sys
 
 MAIN = {"main", "master"}
-ADMIN_DIRS = ("memory/", "factory/", ".claude/")
-ADMIN_FILES = {"CLAUDE.md", "VERSION", "CHANGELOG.md", "README.md", ".gitignore", ".env.example", "LICENSE"}
+ADMIN_DIRS = ("memory/", "factory/", ".banan/", ".agents/", ".claude/", ".cursor/", ".gemini/", ".codex/")
+ADMIN_FILES = {"AGENTS.md", "CLAUDE.md", "GEMINI.md", "VERSION", "CHANGELOG.md", "README.md", ".gitignore", ".env.example", "LICENSE"}
 RUNS = "memory/runs"
 APPROVALS = "memory/freigaben"
-PROTECTED_DIRS = (".claude/hooks/", RUNS + "/", APPROVALS + "/")
-PROTECTED_FILES = {".claude/settings.json"}
-RUNNER = ".claude/hooks/factory_run.py"
+PROTECTED_DIRS = (".banan/", RUNS + "/", APPROVALS + "/")
+PROTECTED_FILES = {".claude/settings.json", ".cursor/hooks.json", ".gemini/settings.json",
+                   ".codex/hooks.json", ".codex/config.toml"}
+RUNNER = ".banan/factory_run.py"
+CHECKER = ".banan/factory_guard.py pruefe"
 LOCKFILES = {
     "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb",
     "Package.resolved", "Podfile.lock", "Gemfile.lock", "poetry.lock", "uv.lock", "Cargo.lock",
@@ -210,11 +216,12 @@ def in_scope(r, entries):
     return False
 
 
-def check_write(root, cwd, path):
+def check_write(root, cwd, path, tool=True):
+    """Grund, warum die Datei nicht geschrieben werden darf, sonst None. tool=False beim Commit."""
     r = rel(root, cwd, path)
     if r is None:
         return None
-    if is_protected(r):
+    if tool and is_protected(r):
         return (f"Factory-Schalter: {r} gehört zu den Schaltern und Nachweisen der Factory. "
                 "Die KI ändert sie nicht von Hand.")
     need = NEEDS.get(r)
@@ -255,8 +262,8 @@ def check_write(root, cwd, path):
 
 def check_bash(root, command):
     command = command or ""
-    rest = command.replace(RUNNER, "")
-    for p in (".claude/hooks", ".claude/settings.json", RUNS, APPROVALS):
+    rest = command.replace(RUNNER, "").replace(CHECKER, "")
+    for p in (".banan", *sorted(PROTECTED_FILES), RUNS, APPROVALS):
         if p in rest:
             return (f"Factory-Schalter: Shell-Befehle fassen {p} nicht an. Lies solche Dateien mit dem "
                     f"Lese-Werkzeug. Testläufe zeichnet nur 'python3 {RUNNER} <gate> <T-Nr>' auf.")
@@ -271,6 +278,8 @@ def check_bash(root, command):
                     "zu schreiben. Dann hör auf.")
     if not re.search(r"\bgit\b[^|;&\n]*\bcommit\b", command):
         return None
+    if "--no-verify" in command:
+        return "Factory-Schalter: Commits laufen immer mit den Prüfungen, ohne --no-verify."
     b = branch(root)
     if b not in MAIN:
         return None
@@ -379,30 +388,102 @@ def check_stop(root):
             "Wartest du nur auf eine Antwort des Auftraggebers, sag ihm das und hör dann auf.")
 
 
+# ---------- Eingabe und Ausgabe je KI ----------
+
+def project_root(cwd):
+    for name in ("CLAUDE_PROJECT_DIR", "GEMINI_PROJECT_DIR", "CURSOR_PROJECT_DIR"):
+        if os.environ.get(name):
+            return os.environ[name]
+    return git(cwd, "rev-parse", "--show-toplevel") or cwd
+
+
+def patch_paths(text):
+    """Dateien aus einem apply_patch-Text (Codex)."""
+    found = re.findall(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$|^\*\*\* Move to: (.+)$", text or "", re.M)
+    return [p.strip() for pair in found for p in pair if p.strip()]
+
+
+def shell_command(data, tool):
+    command = tool.get("command") or data.get("command") or ""
+    return " ".join(str(c) for c in command) if isinstance(command, list) else str(command)
+
+
+def tool_paths(data, tool):
+    """Dateien, die ein Schreib-Werkzeug anfassen will. Die KIs nennen das Feld verschieden."""
+    patched = patch_paths(shell_command(data, tool))
+    if patched:
+        return patched
+    for source in (tool, data):
+        for key in ("file_path", "notebook_path", "path", "filePath", "target_file", "absolute_path"):
+            if isinstance(source.get(key), str) and source[key]:
+                return [source[key]]
+    return []
+
+
+def check_commit(root):
+    """Git pre-commit: dieselben Schreibregeln fuer alle vorgemerkten Dateien."""
+    if branch(root) is None:
+        return None
+    staged = (git(root, "diff", "--cached", "--name-only") or "").splitlines()
+    reasons = [r for r in (check_write(root, root, f, tool=False) for f in staged if f) if r]
+    return "\n".join(reasons[:3]) if reasons else None
+
+
+def block(ki, mode, reason):
+    if mode == "stop" and ki == "codex":
+        print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
+        sys.exit(0)
+    if mode == "stop" and ki == "cursor":
+        print(json.dumps({"followup_message": reason}, ensure_ascii=False))
+        sys.exit(0)
+    print(reason, file=sys.stderr)
+    sys.exit(2)
+
+
 def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    try:
-        data = json.loads(sys.stdin.read() or "{}")
-    except ValueError:
-        data = {}
+    args = sys.argv[1:]
+    mode = args[0] if args else ""
+    ki = args[args.index("--ki") + 1] if "--ki" in args[:-1] else "claude"
+    data = {}
+    if mode not in ("commit", "pruefe"):
+        try:
+            data = json.loads(sys.stdin.read() or "{}")
+        except ValueError:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
     cwd = data.get("cwd") or os.getcwd()
-    root = os.environ.get("CLAUDE_PROJECT_DIR") or cwd
-    tool = data.get("tool_input") or {}
+    root = project_root(cwd)
+    tool = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
     reason = None
     if mode == "prompt":
         note = record_approval(root, data.get("prompt"))
-        if note:
-            print(note)
+        if note and ki != "cursor":
+            event = "BeforeAgent" if ki == "gemini" else "UserPromptSubmit"
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": event, "additionalContext": note}},
+                             ensure_ascii=False))
         return
-    if mode == "write":
-        reason = check_write(root, cwd, tool.get("file_path") or tool.get("notebook_path"))
-    elif mode == "bash":
-        reason = check_bash(root, tool.get("command"))
-    elif mode == "stop" and not data.get("stop_hook_active"):
+    if mode == "commit":
+        reason = check_commit(root)
+        if reason:
+            print(reason, file=sys.stderr)
+            sys.exit(1)
+        return
+    if mode == "pruefe":
         reason = check_stop(root)
+        print(reason or "Factory: Alles in Ordnung, kein Task ist offen oder ohne Nachweis.")
+        sys.exit(1 if reason else 0)
+    if mode == "write":
+        reason = next((r for r in (check_write(root, cwd, p) for p in tool_paths(data, tool)) if r), None)
+    elif mode == "bash":
+        command = shell_command(data, tool)
+        reason = check_bash(root, command) or next(
+            (r for r in (check_write(root, cwd, p) for p in patch_paths(command)) if r), None)
+    elif mode == "stop":
+        again = data.get("stop_hook_active") or (isinstance(data.get("loop_count"), int) and data["loop_count"] > 0)
+        reason = None if again else check_stop(root)
     if reason:
-        print(reason, file=sys.stderr)
-        sys.exit(2)
+        block(ki, mode, reason)
 
 
 if __name__ == "__main__":

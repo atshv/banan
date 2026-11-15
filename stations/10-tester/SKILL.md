@@ -16,14 +16,14 @@ Ein Task ist erst fertig, wenn ein Test es beweist. „Sieht gut aus“ zählt n
 Der Tester kommt zweimal dran, vor und nach dem Bau.
 
 **Vor dem Bau**
-- Tests für den Task schreiben (Schritte 1 und 2) und mit `python3 .claude/hooks/factory_run.py rot T-<Nr>` zeigen, dass sie scheitern. Das beweist, dass sie wirklich das Neue prüfen. Entfällt bei `Tests zuerst: nein`.
+- Tests für den Task schreiben (Schritte 1 und 2) und mit `python3 .banan/factory_run.py rot T-<Nr>` zeigen, dass sie scheitern. Das beweist, dass sie wirklich das Neue prüfen. Entfällt bei `Tests zuerst: nein`.
 
 **Nach dem Bau**
 1. Aus „fertig wenn“ und Abnahmekriterien Testfälle ableiten, auch Randfälle und Fehlerfälle.
 2. Tests schreiben (Unit, und für UI End-to-End mit Playwright).
 3. Web-UI erst ansehen, dann klicken: Seite laden, auf `networkidle` warten, Screenshot, dann Selektoren wählen.
 4. Screenshots mobil (390 px) und Desktop (1440 px) ablegen.
-5. Alle Tests ausführen, nicht nur die neuen, und zwar mit `python3 .claude/hooks/factory_run.py alle T-<Nr>`. Das Script startet alle Pflicht-Prüfungen (Typprüfung, Lint, Tests, Build, je nach Profil) und zeichnet Befehl und Ergebnis in `memory/runs/` auf. Nur diese aufgezeichneten Läufe zählen als Nachweis, ein „grün“ im Bericht allein nicht.
+5. Alle Tests ausführen, nicht nur die neuen, und zwar mit `python3 .banan/factory_run.py alle T-<Nr>`. Das Script startet alle Pflicht-Prüfungen (Typprüfung, Lint, Tests, Build, je nach Profil) und zeichnet Befehl und Ergebnis in `memory/runs/` auf. Nur diese aufgezeichneten Läufe zählen als Nachweis, ein „grün“ im Bericht allein nicht.
 6. Grün → weiter an Reviewer. Rot → zurück an Builder mit genauer Fehlerbeschreibung.
 
 ## Output → `handoffs/tasks/T-<Nr>-test.md`

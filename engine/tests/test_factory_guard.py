@@ -1,4 +1,4 @@
-"""Tests für die Schalter. Aufruf im Factory-Ordner: python3 -m unittest discover engine/claude-code/tests"""
+"""Tests für die Schalter. Aufruf im Factory-Ordner: python3 -m unittest discover engine/tests"""
 import json
 import os
 import subprocess
@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 
-HOOKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".claude", "hooks")
+HOOKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "banan")
 GUARD = os.path.join(HOOKS, "factory_guard.py")
 RUNNER = os.path.join(HOOKS, "factory_run.py")
 
@@ -95,7 +95,7 @@ class GuardTest(unittest.TestCase):
 
     def test_switches_are_protected_everywhere(self):
         self.assertFalse(self.can_write(".claude/settings.json"))
-        self.assertFalse(self.can_write(".claude/hooks/factory_guard.py"))
+        self.assertFalse(self.can_write(".banan/factory_guard.py"))
 
     def test_other_branches_are_free(self):
         self.commit()
@@ -288,9 +288,9 @@ class GuardTest(unittest.TestCase):
         bash = lambda c: self.run_guard("bash", tool_input={"command": c})[0]
         self.assertEqual(bash("echo '{\"exit\":0}' > memory/runs/T-001-test.json"), 2)
         self.assertEqual(bash("cp x memory/freigaben/brief.json"), 2)
-        self.assertEqual(bash("sed -i s/a/b/ .claude/hooks/factory_guard.py"), 2)
-        self.assertEqual(bash("python3 .claude/hooks/factory_run.py test T-001"), 0)
-        self.assertEqual(bash("python3 .claude/hooks/factory_run.py test T-001; rm memory/runs/x"), 2)
+        self.assertEqual(bash("sed -i s/a/b/ .banan/factory_guard.py"), 2)
+        self.assertEqual(bash("python3 .banan/factory_run.py test T-001"), 0)
+        self.assertEqual(bash("python3 .banan/factory_run.py test T-001; rm memory/runs/x"), 2)
 
     def test_gates_only_change_on_main(self):
         self.commit()
@@ -348,6 +348,93 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(bash("git tag v0.0.1"), 0)
         self.write("VERSION", "0.0.2\n")
         self.assertEqual(bash("git tag v0.0.2"), 2, "jede Version braucht ihre eigene Freigabe")
+
+    # Andere KIs und Git
+    def guard(self, mode, ki=None, **data):
+        data.setdefault("cwd", self.root)
+        env = {k: v for k, v in os.environ.items() if not k.endswith("_PROJECT_DIR")}
+        args = [sys.executable, GUARD, mode] + (["--ki", ki] if ki else [])
+        return subprocess.run(args, input=json.dumps(data), capture_output=True, text=True, env=env, cwd=self.root)
+
+    def test_codex_patch_is_checked_file_by_file(self):
+        self.commit()
+        patch = "*** Begin Patch\n*** Update File: memory/status.md\n@@\n*** Add File: src/app.ts\n+x\n*** End Patch"
+        r = self.guard("write", "codex", tool_name="apply_patch", tool_input={"command": patch})
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("src/app.ts", r.stderr)
+        ok = "*** Begin Patch\n*** Update File: memory/status.md\n@@\n*** End Patch"
+        self.assertEqual(self.guard("write", "codex", tool_input={"command": ok}).returncode, 0)
+        r = self.guard("bash", "codex", tool_input={"command": ["bash", "-lc", "apply_patch <<EOF\n" + patch + "\nEOF"]})
+        self.assertEqual(r.returncode, 2)
+
+    def test_gemini_and_cursor_inputs(self):
+        self.commit()
+        self.assertEqual(self.guard("write", "gemini", tool_name="write_file",
+                                    tool_input={"file_path": "src/a.ts", "content": "x"}).returncode, 2)
+        self.assertEqual(self.guard("bash", "gemini", tool_name="run_shell_command",
+                                    tool_input={"command": "git tag v1"}).returncode, 2)
+        self.assertEqual(self.guard("write", "cursor", tool_name="Write", tool_input={"path": "src/a.ts"}).returncode, 2)
+        self.assertEqual(self.guard("bash", "cursor", command="rm -r memory/runs").returncode, 2)
+        self.assertEqual(self.guard("bash", "cursor", command="npm test").returncode, 0)
+
+    def test_stop_answers_in_each_dialect(self):
+        self.status("| T-001 | Login | in Arbeit |\n")
+        self.assertEqual(self.guard("stop", "gemini").returncode, 2)
+        self.assertEqual(self.guard("stop", "gemini", stop_hook_active=True).returncode, 0)
+        r = self.guard("stop", "codex")
+        self.assertEqual((r.returncode, json.loads(r.stdout)["decision"]), (0, "block"))
+        r = self.guard("stop", "cursor")
+        self.assertIn("T-001", json.loads(r.stdout)["followup_message"])
+        self.assertEqual(self.guard("stop", "cursor", loop_count=1).stdout, "")
+
+    def test_prompt_note_is_json_for_the_right_event(self):
+        self.write("memory/handoffs/01-brief.md", "B")
+        r = self.guard("prompt", "gemini", prompt="Freigabe Brief")
+        self.assertEqual(json.loads(r.stdout)["hookSpecificOutput"]["hookEventName"], "BeforeAgent")
+        r = self.guard("prompt", "codex", prompt="Freigabe Brief")
+        self.assertEqual(json.loads(r.stdout)["hookSpecificOutput"]["hookEventName"], "UserPromptSubmit")
+
+    def test_git_hook_checks_every_commit(self):
+        self.commit()
+        hook = os.path.join(HOOKS, "githooks", "pre-commit")
+        os.makedirs(os.path.join(self.root, ".banan"))
+        for name in ("factory_guard.py", "factory_run.py"):
+            with open(os.path.join(HOOKS, name), encoding="utf-8") as src:
+                self.write(f".banan/{name}", src.read())
+        sh(self.root, "add", "-A")
+        sh(self.root, "commit", "-q", "-m", "banan")
+        sh(self.root, "config", "core.hooksPath", os.path.dirname(hook))
+        commit = lambda: subprocess.run(["git", "-C", self.root, "commit", "-q", "-m", "x"], capture_output=True, text=True)
+        self.write("src/app.ts", "x")
+        sh(self.root, "add", "-A")
+        r = commit()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("Produktcode", r.stderr)
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.assertEqual(commit().returncode, 0)
+        self.write("docs/x.md", "ausserhalb")
+        self.write("memory/runs/T-003-test.json", "{}")
+        sh(self.root, "add", "-A")
+        r = commit()
+        self.assertIn("ausserhalb des Bereichs", r.stderr)
+        sh(self.root, "reset", "-q", "docs/x.md")
+        self.assertEqual(commit().returncode, 0, "Nachweise in memory/runs dürfen committet werden")
+
+    def test_check_command_and_terminal_only_approval(self):
+        self.status("| T-001 | Login | in Arbeit |\n")
+        r = self.guard("pruefe")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("T-001", r.stdout)
+        self.status("| T-001 | Login | offen |\n")
+        self.assertEqual(self.guard("pruefe").returncode, 0)
+        self.write("memory/handoffs/01-brief.md", "B")
+        r = subprocess.run([sys.executable, os.path.join(HOOKS, "freigabe.py"), "brief"], input="ja\n",
+                           capture_output=True, text=True, cwd=self.root)
+        self.assertEqual(r.returncode, 2, "ohne echtes Terminal keine Freigabe")
+        self.assertFalse(os.path.exists(os.path.join(self.root, "memory/freigaben/brief.json")))
+        self.assertEqual(self.guard("bash", tool_input={"command": "python3 .banan/freigabe.py brief"}).returncode, 2)
+        self.assertEqual(self.guard("bash", tool_input={"command": "python3 .banan/factory_guard.py pruefe"}).returncode, 0)
+        self.assertEqual(self.guard("bash", tool_input={"command": "git commit --no-verify -m x"}).returncode, 2)
 
     def test_broken_input_never_blocks(self):
         r = subprocess.run([sys.executable, GUARD, "write"], input="kein json", capture_output=True, text=True)

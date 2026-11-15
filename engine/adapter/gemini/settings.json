@@ -1,0 +1,27 @@
+{
+  "context": { "fileName": ["AGENTS.md", "GEMINI.md"] },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "write_file|replace",
+        "hooks": [{ "name": "banan-write", "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" write --ki gemini", "timeout": 15000 }]
+      },
+      {
+        "matcher": "run_shell_command",
+        "hooks": [{ "name": "banan-shell", "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" bash --ki gemini", "timeout": 15000 }]
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "matcher": "*",
+        "hooks": [{ "name": "banan-freigabe", "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" prompt --ki gemini", "timeout": 15000 }]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "matcher": "*",
+        "hooks": [{ "name": "banan-stop", "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" stop --ki gemini", "timeout": 15000 }]
+      }
+    ]
+  }
+}

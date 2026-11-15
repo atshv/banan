@@ -2,9 +2,9 @@
 """Fuehrt Pruefungen aus und zeichnet das Ergebnis auf.
 
 Aufruf im Projektordner:
-  python3 .claude/hooks/factory_run.py rot <T-Nr>          vor dem Bau: die neuen Tests muessen scheitern
-  python3 .claude/hooks/factory_run.py alle <T-Nr>         nach dem Bau: alle Pflicht-Pruefungen und die Groesse
-  python3 .claude/hooks/factory_run.py <pruefung> <T-Nr>   eine einzelne Pruefung, z. B. test T-001
+  python3 .banan/factory_run.py rot <T-Nr>          vor dem Bau: die neuen Tests muessen scheitern
+  python3 .banan/factory_run.py alle <T-Nr>         nach dem Bau: alle Pflicht-Pruefungen und die Groesse
+  python3 .banan/factory_run.py <pruefung> <T-Nr>   eine einzelne Pruefung, z. B. test T-001
 
 Die Befehle stehen in memory/gates.json, z. B.
   {"pflicht": ["typecheck", "lint", "test", "build"], "test": "npm test", "max_zeilen": 800, ...}
@@ -76,7 +76,7 @@ def task_field(root, task, key):
 
 
 def skipped(path):
-    return path.startswith(("memory/", ".claude/")) or os.path.basename(path) in LOCKFILES
+    return path.startswith(("memory/", ".claude/", ".banan/", ".agents/", ".cursor/", ".gemini/", ".codex/")) or os.path.basename(path) in LOCKFILES
 
 
 def base_commit(root):
@@ -211,11 +211,12 @@ def run_gate(root, name, task, command, quiet):
 
 def main():
     if len(sys.argv) != 3 or not re.match(r"[a-z][a-z0-9-]*$", sys.argv[1]) or not re.match(r"T-\d+$", sys.argv[2]):
-        print("Aufruf: python3 .claude/hooks/factory_run.py <rot|alle|pruefung> <T-Nr>, z. B. alle T-001",
+        print("Aufruf: python3 .banan/factory_run.py <rot|alle|pruefung> <T-Nr>, z. B. alle T-001",
               file=sys.stderr)
         return 64
     gate, task = sys.argv[1], sys.argv[2]
-    root = os.environ.get("CLAUDE_PROJECT_DIR") or git(os.getcwd(), "rev-parse", "--show-toplevel") or os.getcwd()
+    root = (os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("GEMINI_PROJECT_DIR")
+            or git(os.getcwd(), "rev-parse", "--show-toplevel") or os.getcwd())
     gates = load_json(root, GATES)
     if gate == "groesse":
         return run_size(root, task, gates)

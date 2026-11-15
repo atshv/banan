@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      { "matcher": "Write|Edit|MultiEdit|Delete", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" write --ki cursor" }
+    ],
+    "beforeShellExecution": [
+      { "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" bash --ki cursor" }
+    ],
+    "beforeSubmitPrompt": [
+      { "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" prompt --ki cursor" }
+    ],
+    "stop": [
+      { "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" stop --ki cursor", "loop_limit": 1 }
+    ]
+  }
+}

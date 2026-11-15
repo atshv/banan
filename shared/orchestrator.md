@@ -2,7 +2,7 @@
 
 Der Orchestrator steuert die Factory. Er baut nichts selbst, sondern verteilt Arbeit und hält den Projektzustand.
 
-Umgesetzt ist er mit Claude Code in `engine/claude-code/CLAUDE.md`. Sub-Agents liegen in `engine/claude-code/.claude/agents/`.
+Umgesetzt ist er in `engine/AGENTS.md`, einer Anleitung, die jede KI liest. Die Aufträge der Sub-Agents liegen in `engine/agents/`.
 
 ## Aufgaben
 - Liest beim Start `memory/status.md` und entscheidet, welche Station als Nächstes läuft.

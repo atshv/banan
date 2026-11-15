@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" write --ki codex", "timeout": 15 }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" bash --ki codex", "timeout": 15 }]
+      }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" prompt --ki codex", "timeout": 15 }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/.banan/factory_guard.py\" stop --ki codex", "timeout": 15 }] }
+    ]
+  }
+}
