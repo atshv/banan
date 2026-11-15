@@ -12,7 +12,7 @@ Gute Doku spart beim nächsten Projekt und beim nächsten Agent viel Zeit, denn 
 
 ## Ablauf
 1. README: Was ist das, wie starte ich es, wie teste ich es.
-2. Changelog: Was ist neu, was ist behoben, in Nutzersprache.
+2. Changelog: Was ist neu, was ist behoben, in Nutzersprache. Format und Abschnitte nach `shared/versionierung.md`, neue Einträge zuerst unter `[Unreleased]`.
 3. Umgebungsvariablen nur mit Namen und Zweck, nie mit Werten.
 4. Reader-Test: Ein frischer Agent ohne Vorwissen versucht, das Projekt nur mit der Doku zu starten. Wo er hängt, wird nachgebessert.
 

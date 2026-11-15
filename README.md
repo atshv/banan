@@ -36,6 +36,8 @@ Whiteboard mit der Übersicht: https://claude.ai/artifact/4hGCWWWr2gkzLB6iUQdmXu
 ```
 software-factory/
 ├── README.md            Diese Übersicht
+├── VERSION              Aktuelle Version
+├── CHANGELOG.md         Alle Änderungen pro Version
 ├── stations/            15 Stationen, je eine SKILL.md
 ├── shared/              Regeln, die für alle Stationen gelten
 ├── memory/              Vorlagen fürs Projekt-Gedächtnis
@@ -58,6 +60,10 @@ software-factory/
 - **Warum statt MUSS.** Gründe erklären statt Befehle in Grossbuchstaben.
 - **Evals.** Mit und ohne Skill vergleichen, bevor ein Skill als fertig gilt.
 - **Wiederholtes bündeln.** Was Agents mehrfach bauen, wird ein Script.
+
+## Versionen
+
+Aktuelle Version steht in `VERSION`, alle Änderungen in `CHANGELOG.md`. Jedes Projekt startet bei 0.0.1, v1.0.0 ist das erste echte Release. Regeln in `shared/versionierung.md`.
 
 ## Herkunft
 
