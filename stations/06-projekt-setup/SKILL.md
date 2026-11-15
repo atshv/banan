@@ -11,7 +11,7 @@ Ohne festes Gerüst richtet jeder Builder-Agent das Projekt anders ein. Das füh
 - `handoffs/03-architektur.md` (Stack, Ordnerstruktur)
 
 ## Ablauf
-1. Repo anlegen, Branch-Regeln aus `shared/git-strategie.md` einrichten.
+1. Repo anlegen, Branch-Regeln aus `shared/git-strategie.md` einrichten. Gibt es auf `main` schon einen Commit, das Gerüst auf dem Branch `setup/grundgeruest` bauen und danach nach `main` mergen, denn die Schreibsperre lässt auf `main` keinen Produktcode zu.
 2. Grundgerüst mit dem offiziellen Init-Befehl des Stacks erzeugen (z. B. `npx create-next-app`, Xcode-Vorlage).
 3. Web-Apps: `npx shadcn@latest init`, danach Tailwind und Design-Tokens aus `design/design-regeln.md`.
 4. Linter und Formatter einrichten (Web: `npx ultracite init`).

@@ -46,9 +46,20 @@ for d in "$ENGINE"/.claude/skills/*/; do
 done
 cp "$ENGINE"/.claude/agents/*.md "$ZIEL/.claude/agents/"
 
-# Rechte nur anlegen, nie überschreiben
+# Schalter (Hooks). Sie brauchen python3.
+mkdir -p "$ZIEL/.claude/hooks"
+cp "$ENGINE"/.claude/hooks/*.py "$ZIEL/.claude/hooks/"
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Achtung: python3 fehlt. Die Schalter der Factory laufen erst, wenn python3 installiert ist." >&2
+fi
+
+# Sperren und Schalter anlegen oder in bestehende Einstellungen einfügen
 if [ ! -f "$ZIEL/.claude/settings.json" ]; then
   cp "$ENGINE/.claude/settings.json" "$ZIEL/.claude/settings.json"
+elif command -v python3 >/dev/null 2>&1; then
+  python3 "$ENGINE/merge_settings.py" "$ENGINE/.claude/settings.json" "$ZIEL/.claude/settings.json"
+else
+  echo "Achtung: .claude/settings.json nicht aktualisiert, weil python3 fehlt." >&2
 fi
 
 # Regeln und Design gehören der Factory und werden aktualisiert
