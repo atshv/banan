@@ -1,4 +1,7 @@
 {
+  "pflicht": ["test"],
   "test": "",
-  "lint": ""
+  "lint": "",
+  "typecheck": "",
+  "build": ""
 }

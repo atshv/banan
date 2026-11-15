@@ -6,9 +6,9 @@ Die meisten Regeln der Factory sind Anweisungen. Diese fünf werden von einem Pr
 |---|---|---|
 | Schreibsperre `main` | vor jedem Schreiben und vor `git commit` | Kein Produktcode direkt auf `main`. Erlaubt bleiben `memory/`, `factory/`, `.claude/`, `CLAUDE.md`, `README.md`, `VERSION`, `CHANGELOG.md`. |
 | Task-Bereich | vor jedem Schreiben auf `task/T-<Nr>-…` | Nur Dateien aus der Zeile `Bereich:` des Tasks in `memory/handoffs/05-tasks.md`. Erlaubt bleiben `memory/` und Lockfiles. |
-| Aufgezeichnete Testläufe | wenn der Tester prüft | Tests laufen über `python3 .claude/hooks/factory_run.py test T-<Nr>`. Das Script führt den Befehl aus `memory/gates.json` aus und speichert Befehl, Ergebnis und Ausgabe in `memory/runs/`. |
+| Aufgezeichnete Prüfungen | wenn der Tester prüft | Typprüfung, Lint, Tests und Build laufen über `python3 .claude/hooks/factory_run.py alle T-<Nr>`. Das Script führt die Befehle aus `memory/gates.json` aus und speichert Befehl, Ergebnis und Ausgabe in `memory/runs/`. Welche Prüfungen Pflicht sind, legt das Profil fest (Liste `pflicht`), Tests gehören immer dazu. |
 | Freigaben | vor der nächsten Station und vor `git tag` | Research braucht die Freigabe Brief, Design die Freigabe Architektur, der Plan die Freigabe Design, ein Versions-Tag die Freigabe Release. |
-| Stop-Check | bevor die KI aufhört | Kein Aufhören, solange ein Task unterwegs ist. „Fertig“ gilt nur mit Build-Bericht, aufgezeichnetem grünem Testlauf und bestandenem Review und Security-Check. |
+| Stop-Check | bevor die KI aufhört | Kein Aufhören, solange ein Task unterwegs ist. „Fertig“ gilt nur mit Build-Bericht, allen Pflicht-Prüfungen aufgezeichnet und grün, und bestandenem Review und Security-Check. |
 
 ## Freigaben
 Du gibst frei, indem du eine Nachricht schreibst, die nur daraus besteht.
@@ -26,7 +26,7 @@ Ein Programm zeichnet das in `memory/freigaben/` auf, zusammen mit dem genauen S
 - Die Schalter brauchen `python3`. Fehlt es, läuft die Factory ohne Schalter weiter.
 
 ## Grenzen
-Die Schalter sind kein Tresor. Sie prüfen die Schreib-Werkzeuge, `git commit`, `git tag` und Shell-Befehle, die geschützte Ordner nennen, aber nicht jeden denkbaren Umweg. Ein Befehl wie `npx shadcn add` kann Dateien ausserhalb des Bereichs anlegen. Das fängt der Reviewer. Welcher Testbefehl in `gates.json` steht, legt der Orchestrator fest. Er steht in jedem aufgezeichneten Lauf, damit man ihn prüfen kann.
+Die Schalter sind kein Tresor. Sie prüfen die Schreib-Werkzeuge, `git commit`, `git tag` und Shell-Befehle, die geschützte Ordner nennen, aber nicht jeden denkbaren Umweg. Ein Befehl wie `npx shadcn add` kann Dateien ausserhalb des Bereichs anlegen. Das fängt der Reviewer. Welche Befehle und Pflicht-Prüfungen in `gates.json` stehen, legt der Orchestrator fest. Der Befehl steht in jedem aufgezeichneten Lauf, damit man ihn prüfen kann.
 
 ## Tests
 Im Factory-Ordner: `python3 -m unittest discover engine/claude-code/tests`

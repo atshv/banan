@@ -44,6 +44,14 @@ Dann im Projektordner Claude Code öffnen und `/factory-start` eingeben. Du brau
 
 Scheitert ein Task dreimal, kommt er zu dir.
 
+## 🎯 Profile
+
+Der Brief legt fest, was gebaut wird. Jedes Profil bringt eigenen Stack, eigene Pflicht-Prüfungen und eine eigene Release-Liste mit. Ein Projekt kann mehrere haben.
+
+| 🌐 [`web-app`](profiles/web-app.md) | 📱 [`iphone-app`](profiles/iphone-app.md) | ⚙️ [`engine`](profiles/engine.md) | 🖥️ [`backend`](profiles/backend.md) |
+|:--|:--|:--|:--|
+| Websites und Web-Apps | Native iPhone-Apps | Kernlogik ohne Oberfläche | Server, APIs, CLI |
+
 ## 🔒 Schalter statt Vertrauen
 
 Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. Solange es nichts blockiert, kostet es keine Tokens.
@@ -51,7 +59,7 @@ Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. 
 | | |
 |:--|:--|
 | 🌿 **Geschützter Hauptzweig**<br>Kein Produktcode direkt auf `main` | 📦 **Task-Bereich**<br>Ein Builder schreibt nur in den Ordnern seines Tasks |
-| ✅ **Echte Nachweise**<br>„Fertig“ gilt nur mit aufgezeichnetem, grünem Testlauf | 🙋 **Deine Freigabe**<br>Die KI kann sich nicht selbst freigeben |
+| ✅ **Echte Nachweise**<br>„Fertig“ gilt nur, wenn Typprüfung, Lint, Tests und Build aufgezeichnet und grün sind | 🙋 **Deine Freigabe**<br>Die KI kann sich nicht selbst freigeben |
 
 Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
 
@@ -64,6 +72,7 @@ Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
 | [`stations/`](stations) | 15 Stationen, je eine `SKILL.md` |
 | [`shared/`](shared) | Regeln für alle Stationen |
 | [`memory/`](memory) | Vorlagen fürs Projekt-Gedächtnis |
+| [`profiles/`](profiles) | Ein Profil pro Projekttyp |
 | [`design/`](design) | Design-Regeln nach Magic UI |
 | [`engine/claude-code/`](engine/claude-code) | Orchestrator, Sub-Agents, Befehle, Schalter |
 | [`vendor-skills/`](vendor-skills) | Übernommene Skills mit ihren Lizenzen |
@@ -81,5 +90,5 @@ Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
 </p>
 
 <p align="center">
-  <sub>Skill-Muster aus <a href="https://github.com/anthropics/skills">anthropics/skills</a> · Design-Regeln aus <a href="https://github.com/magicuidesign/magicui">magicuidesign/magicui</a></sub>
+  <sub>Skill-Muster aus <a href="https://github.com/anthropics/skills">anthropics/skills</a> · Design-Regeln aus <a href="https://github.com/magicuidesign/magicui">magicuidesign/magicui</a> · Feinschliff aus <a href="https://github.com/emilkowalski/skills">emilkowalski/skills</a></sub>
 </p>

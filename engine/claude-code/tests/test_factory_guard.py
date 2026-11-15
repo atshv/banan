@@ -141,10 +141,10 @@ class GuardTest(unittest.TestCase):
         self.write("memory/handoffs/tasks/T-001-security.md", "**Ergebnis:** OK")
         code, err = self.run_guard("stop")
         self.assertEqual(code, 2, "ein Bericht 'grün' ohne aufgezeichneten Lauf reicht nicht")
-        self.assertIn("Testlauf", err)
+        self.assertIn("nicht aufgezeichnet: test", err)
         self.write("memory/gates.json", json.dumps({"test": "exit 1"}))
         self.assertEqual(self.run_runner("test", "T-001").returncode, 1)
-        self.assertIn("rot", self.run_guard("stop")[1])
+        self.assertIn("rot: test", self.run_guard("stop")[1])
         self.write("memory/gates.json", json.dumps({"test": "echo alles gut"}))
         self.assertEqual(self.run_runner("test", "T-001").returncode, 0)
         self.assertEqual(self.run_guard("stop")[0], 0)
@@ -164,6 +164,32 @@ class GuardTest(unittest.TestCase):
             record = json.load(f)
         self.assertEqual((record["exit"], record["bestanden"], record["befehl"]), (3, False, "echo hallo && exit 3"))
         self.assertIn("hallo", record["ausgabe_ende"])
+
+    def test_done_needs_every_required_gate(self):
+        self.status("| T-001 | Login | fertig |\n")
+        self.write("memory/handoffs/tasks/T-001-build.md", "x")
+        self.write("memory/handoffs/tasks/T-001-review.md", "Ergebnis: ok")
+        self.write("memory/handoffs/tasks/T-001-security.md", "Ergebnis: ok")
+        self.write("memory/gates.json", json.dumps({"pflicht": ["typecheck", "build"], "typecheck": "true",
+                                                    "build": "false", "test": "true"}))
+        self.assertEqual(self.run_runner("test", "T-001").returncode, 0)
+        code, err = self.run_guard("stop")
+        self.assertEqual(code, 2)
+        self.assertIn("typecheck, build", err)
+        r = self.run_runner("alle", "T-001")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("typecheck für T-001 bestanden", r.stdout)
+        self.assertIn("rot: build", self.run_guard("stop")[1])
+        self.write("memory/gates.json", json.dumps({"pflicht": ["typecheck", "build"], "typecheck": "true",
+                                                    "build": "true", "test": "true"}))
+        self.assertEqual(self.run_runner("alle", "T-001").returncode, 0)
+        self.assertEqual(self.run_guard("stop")[0], 0)
+
+    def test_all_stops_on_missing_command(self):
+        self.write("memory/gates.json", json.dumps({"pflicht": ["lint"], "test": "true", "lint": ""}))
+        r = self.run_runner("alle", "T-001")
+        self.assertEqual(r.returncode, 65)
+        self.assertIn("lint", r.stderr)
 
     def test_runner_needs_a_command(self):
         self.assertEqual(self.run_runner("test", "T-001").returncode, 65)

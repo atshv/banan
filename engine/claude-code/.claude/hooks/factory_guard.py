@@ -278,19 +278,27 @@ def reports(root):
     return found
 
 
-def test_runs(root):
-    """Aufgezeichnete Testlaeufe: Task-Nummer -> Exit-Code."""
+def recorded_runs(root):
+    """Aufgezeichnete Laeufe: (Task-Nummer, Pruefung) -> Exit-Code."""
     found = {}
     try:
         names = os.listdir(os.path.join(root, RUNS))
     except OSError:
         return found
     for name in names:
-        m = re.match(r"T-(\d+)-test\.json$", name, re.I)
+        m = re.match(r"T-(\d+)-([a-z][a-z0-9-]*)\.json$", name, re.I)
         record = read_json(root, f"{RUNS}/{name}") if m else None
-        if record is not None:
-            found[int(m.group(1))] = record.get("exit")
+        if isinstance(record, dict):
+            found[(int(m.group(1)), m.group(2).lower())] = record.get("exit")
     return found
+
+
+def required_gates(root):
+    """Pflicht-Pruefungen aus gates.json. 'test' gehoert immer dazu."""
+    gates = read_json(root, GATES)
+    listed = gates.get("pflicht") if isinstance(gates, dict) else None
+    names = [g for g in listed if isinstance(g, str) and g] if isinstance(listed, list) else []
+    return names if "test" in names else names + ["test"]
 
 
 def passed(root, path):
@@ -302,7 +310,7 @@ def check_stop(root):
     text = read(root, STATUS)
     if text is None:
         return None
-    found, runs = reports(root), test_runs(root)
+    found, runs, required = reports(root), recorded_runs(root), required_gates(root)
     problems = []
     for line in text.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
@@ -317,11 +325,13 @@ def check_stop(root):
         elif state == "fertig":
             if (no, "build") not in found:
                 problems.append(f"{label} steht auf 'fertig', aber der Build-Bericht fehlt.")
-            if no not in runs:
-                problems.append(f"{label} steht auf 'fertig', aber es gibt keinen aufgezeichneten Testlauf "
-                                f"(python3 {RUNNER} test {label}).")
-            elif runs[no] != 0:
-                problems.append(f"{label} steht auf 'fertig', aber der letzte aufgezeichnete Testlauf ist rot.")
+            missing = [g for g in required if (no, g) not in runs]
+            red = [g for g in required if runs.get((no, g), 0) != 0]
+            if missing:
+                problems.append(f"{label} steht auf 'fertig', aber diese Prüfungen sind nicht aufgezeichnet: "
+                                f"{', '.join(missing)} (python3 {RUNNER} alle {label}).")
+            if red:
+                problems.append(f"{label} steht auf 'fertig', aber diese Prüfungen sind rot: {', '.join(red)}.")
             for kind, word in (("review", "Review"), ("security", "Security")):
                 path = found.get((no, kind))
                 if path is None:

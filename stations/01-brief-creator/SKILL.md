@@ -26,12 +26,13 @@ Der Brief ist die Grundlage für alle späteren Stationen. Was hier fehlt, baut 
 ## Nice-to-haves
 ## No-gos
 ## Abnahmekriterien (prüfbar, je eine Zeile)
-## Plattform (Web, iPhone, beides)
+## Profil (eine Zeile `Profil: web-app`, mehrere mit Komma. Auswahl in `factory/profiles/README.md`)
 ## Offene Fragen
 ```
 
 ## Gate
 - Jedes Must-have hat mindestens ein prüfbares Abnahmekriterium.
+- Mindestens ein Profil ist gewählt.
 - Auftraggeber hat den Brief freigegeben.
 
 ## Nutzt

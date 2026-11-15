@@ -6,6 +6,18 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.6] – 2026-11-15
+
+### Hinzugefügt
+- Profile pro Projekttyp in `profiles/`: `web-app`, `iphone-app`, `engine`, `backend`. Jedes legt Stack-Vorschlag, Pflicht-Prüfungen, Testmethode, passende Skills und eine Release-Liste fest. Der Brief wählt das Profil.
+- Mehr aufgezeichnete Prüfungen. `memory/gates.json` hat eine Liste `pflicht`, z. B. Typprüfung, Lint, Tests und Build. „Fertig“ braucht alle davon grün.
+- `factory_run.py alle T-<Nr>` startet alle Pflicht-Prüfungen in einem Aufruf
+- 20 Skills von Emil Kowalski für Oberflächen, Animation und Swift in `vendor-skills/emilkowalski/` (MIT), in den Profilen den Stationen zugeordnet
+- Design-Station verlangt für jeden Screen die Zustände leer, lädt, Fehler und gefüllt
+
+### Geändert
+- Brief hat neu die Zeile `Profil:` statt „Plattform“
+
 ## [0.0.5] – 2026-11-15
 
 ### Geändert
@@ -65,7 +77,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.6...HEAD
+[0.0.6]: https://github.com/atshv/banan/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/atshv/banan/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/atshv/banan/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/atshv/banan/compare/v0.0.2...v0.0.3
