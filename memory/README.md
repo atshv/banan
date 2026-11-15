@@ -10,6 +10,9 @@ Diesen Ordner zu Beginn jedes Projekts ins Repo kopieren. Er hält fest, was üb
 | `conventions.md` | Namen, Begriffe, Ordner, Code-Stil |
 | `questions.md` | Offene Fragen und Annahmen, die du bestätigst |
 | `handoffs/` | Jede Übergabe zwischen Stationen als Datei |
+| `gates.json` | Befehle für Test und Lint, trägt Station 6 ein |
+| `runs/` | Aufgezeichnete Testläufe, schreibt nur `factory_run.py` |
+| `freigaben/` | Deine Freigaben, schreibt nur ein Programm |
 
 ## Wie es lebt
 1. **Lesen.** Jede Station lädt beim Start nur, was sie braucht.

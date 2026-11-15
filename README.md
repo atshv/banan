@@ -1,100 +1,63 @@
-# Software Factory von A bis Z
+# 🍌 banan
 
-Ein Baukasten für eine KI-Software-Factory. 15 Stationen bauen ein Projekt von der Idee bis zum Betrieb. Übergreifende Regeln halten das Ganze zusammen.
+**Eine schlanke KI-Software-Factory für Claude Code.** Du beschreibst deine Idee, banan führt sie durch 15 Stationen bis zur fertigen App. Du entscheidest nur an vier Stellen.
 
-Whiteboard mit der Übersicht: https://claude.ai/artifact/4hGCWWWr2gkzLB6iUQdmXu
+Version siehe [`VERSION`](VERSION) · Änderungen im [`CHANGELOG.md`](CHANGELOG.md) · vor v1.0.0 Entwicklungsstand
 
-**Leitsatz** Klare Übergaben zwischen Stationen zählen mehr als mehr Creator.
+## Start
 
-## Ablauf
-
-| Phase | Station | Ordner |
-|---|---|---|
-| Planen | 1 Brief-Creator | `stations/01-brief-creator` |
-| | 2 Research | `stations/02-research` |
-| | 3 Architect-Creator | `stations/03-architect-creator` |
-| | 4 Design / UX | `stations/04-design-ux` |
-| | 5 Planner | `stations/05-planner` |
-| Ausrüsten | 6 Projekt-Setup | `stations/06-projekt-setup` |
-| | 7 Skill-Creator | `stations/07-skill-creator` |
-| | 8 Agent-Creator | `stations/08-agent-creator` |
-| Bauen & prüfen | 9 Builder | `stations/09-builder` |
-| | 10 Tester | `stations/10-tester` |
-| | 11 Reviewer | `stations/11-reviewer` |
-| | 12 Security-Check | `stations/12-security-check` |
-| Ausliefern | 13 Release | `stations/13-release` |
-| | 14 Doku-Writer | `stations/14-doku-writer` |
-| Betreiben | 15 Betrieb | `stations/15-betrieb` |
-
-**Rückwege**
-- Tester oder Reviewer lehnen ab → zurück zum Builder. Höchstens 3 Versuche, dann geht der Task an dich.
-- Reviewer findet wiederkehrende Fehler → Lessons learned → Skill-Creator verbessert die Skills.
-- Betrieb meldet Bugs und Feedback → neuer Brief.
-
-## Ordner
-
-```
-software-factory/
-├── README.md            Diese Übersicht
-├── VERSION              Aktuelle Version
-├── CHANGELOG.md         Alle Änderungen pro Version
-├── stations/            15 Stationen, je eine SKILL.md
-├── shared/              Regeln, die für alle Stationen gelten
-├── memory/              Vorlagen fürs Projekt-Gedächtnis
-├── design/              Design-Regeln nach Magic UI
-├── engine/claude-code/  Motor: Orchestrator, Sub-Agents, Befehle, Sperren
-├── install.sh           Installiert die Factory in einen Projektordner
-└── vendor-skills/       Übernommene Skills von Anthropic und Magic UI (mit Lizenz)
+```bash
+git clone https://github.com/atshv/banan
+cd banan
+./install.sh ~/Projekte/meine-app
 ```
 
-## So startest du ein Projekt
+Danach im Projektordner Claude Code starten und `/factory-start` eingeben. Gebraucht werden Git und Python 3.
 
-Der Motor ist Claude Code. Er liegt in `engine/claude-code/` und wird mit `install.sh` in dein Projekt kopiert.
-
-1. Factory einmal auf deinen Computer holen: `git clone https://github.com/atshv/banan`
-2. In den Ordner `banan` wechseln und das Projekt anlegen: `./install.sh ~/Projekte/meine-app`
-   Oder in Claude Code im Ordner `banan` eingeben: `/factory-neu ~/Projekte/meine-app`
-3. Im Projektordner Claude Code starten und `/factory-start` eingeben.
-4. Station 1 interviewt dich. Danach geht es mit `/factory-weiter` Station für Station weiter.
-5. Du entscheidest nur an den Checkpoints (Brief, Architektur, Design, Release) und wenn ein Task 3× scheitert.
-
-| Befehl | Was passiert |
+| Du gibst ein | Was passiert |
 |---|---|
-| `/factory-start` | Neues Projekt, Interview für den Brief |
-| `/factory-weiter` | Weiter bis zum nächsten Checkpoint oder Problem |
+| `/factory-start` | Interview zu deiner Idee, daraus entsteht der Brief |
+| `/factory-weiter` | Arbeitet weiter bis zur nächsten Entscheidung |
 | `/factory-status` | Stand in einfacher Sprache |
-| `/factory-release` | Nächste Version ausliefern |
+| `/factory-release` | Liefert die nächste Version aus |
+| `Freigabe Brief` | Deine Freigabe. Auch `Architektur`, `Design`, `Release` |
 
-`install.sh` kann jederzeit wieder laufen, um die Factory im Projekt zu aktualisieren. Dein Projekt-Gedächtnis, deine `settings.json` und eigene Abschnitte in `CLAUDE.md` bleiben dabei erhalten.
+## Die Linie
 
-### Schalter
-Drei Regeln erzwingt ein kleines Programm statt nur eine Anweisung. Kein Produktcode direkt auf `main`, Schreiben nur im Bereich des Tasks, kein Aufhören mit offenen Tasks oder „fertig“ ohne Nachweise. Details und Grenzen in `shared/schalter.md`. Die Schalter brauchen `python3`.
+| Phase | Stationen |
+|---|---|
+| Planen | 1 Brief · 2 Research · 3 Architektur · 4 Design · 5 Plan |
+| Ausrüsten | 6 Setup · 7 Skills · 8 Agents |
+| Bauen & prüfen | 9 Builder · 10 Tester · 11 Reviewer · 12 Security |
+| Ausliefern | 13 Release · 14 Doku |
+| Betreiben | 15 Betrieb, Bugs und Feedback werden zum nächsten Brief |
 
-### Was im Projekt landet
-```
-meine-app/
-├── CLAUDE.md            Anleitung für den Orchestrator
-├── .claude/skills/      15 Stationen, 4 Befehle, übernommene Skills
-├── .claude/agents/      Researcher, Builder, Tester, Reviewer, Security
-├── .claude/settings.json  Sperren (kein Force-Push, kein .env lesen, kein rm -rf)
-├── .claude/hooks/       Schalter, die drei Regeln per Programm erzwingen
-├── factory/             Regeln und Design-Vorgaben der Factory
-└── memory/              Projekt-Gedächtnis und Übergaben
-```
+Scheitert ein Task dreimal, kommt er zu dir. Fehler aus Review und Test werden zu Lessons und daraus zu besseren Skills.
 
-## Muster, die jeder Skill hier befolgt
+## Schalter statt Vertrauen
 
-- **Description = Auslöser.** Sie sagt klar, wann der Skill greift.
-- **Schlanke SKILL.md.** Unter 500 Zeilen, Details in `references/`.
-- **Scripts als Blackbox.** In `scripts/`, aufrufen statt lesen.
-- **Warum statt MUSS.** Gründe erklären statt Befehle in Grossbuchstaben.
-- **Evals.** Mit und ohne Skill vergleichen, bevor ein Skill als fertig gilt.
-- **Wiederholtes bündeln.** Was Agents mehrfach bauen, wird ein Script.
+Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. Es kostet keine Tokens, solange es nichts blockiert.
 
-## Versionen
+- Kein Produktcode direkt auf `main`
+- Ein Builder schreibt nur im Bereich seines Tasks
+- „Fertig“ gilt nur mit aufgezeichnetem, grünem Testlauf und bestandenem Review
+- Weiter geht es nur mit deiner Freigabe, die KI kann sie sich nicht selbst geben
 
-Aktuelle Version steht in `VERSION`, alle Änderungen in `CHANGELOG.md`. Jedes Projekt startet bei 0.0.1, v1.0.0 ist das erste echte Release. Regeln in `shared/versionierung.md`.
+Details und Grenzen in [`shared/schalter.md`](shared/schalter.md).
+
+## Aufbau
+
+| Ordner | Inhalt |
+|---|---|
+| [`stations/`](stations) | 15 Stationen, je eine `SKILL.md` |
+| [`shared/`](shared) | Regeln für alle Stationen |
+| [`memory/`](memory) | Vorlagen fürs Projekt-Gedächtnis |
+| [`design/`](design) | Design-Regeln nach Magic UI |
+| [`engine/claude-code/`](engine/claude-code) | Orchestrator, Sub-Agents, Befehle, Schalter |
+| [`vendor-skills/`](vendor-skills) | Übernommene Skills mit ihren Lizenzen |
+
+`install.sh` kann jederzeit wieder laufen und aktualisiert banan im Projekt. Dein Projekt-Gedächtnis und eigene Einstellungen bleiben erhalten.
 
 ## Herkunft
 
-Die Muster stammen aus [anthropics/skills](https://github.com/anthropics/skills), die Design-Regeln aus [magicuidesign/magicui](https://github.com/magicuidesign/magicui). Lizenzen liegen bei den Skills in `vendor-skills/`.
+Skill-Muster aus [anthropics/skills](https://github.com/anthropics/skills), Design-Regeln aus [magicuidesign/magicui](https://github.com/magicuidesign/magicui).

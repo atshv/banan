@@ -6,6 +6,18 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.4] – 2026-11-15
+
+### Hinzugefügt
+- Aufgezeichnete Testläufe. `factory_run.py` führt den Testbefehl aus `memory/gates.json` aus und speichert Befehl, Ergebnis und Ausgabe in `memory/runs/`. „Fertig“ gilt nur noch mit einem solchen grünen Lauf, nicht mehr mit einem „grün“ im Bericht.
+- Freigaben, die sich die KI nicht selbst geben kann. Eine Nachricht wie `Freigabe Brief` wird von einem Programm aufgezeichnet, zusammen mit dem Stand des Dokuments. Ohne gültige Freigabe blockiert ein Schalter Research, Design, Plan und den Versions-Tag.
+- Schutz für `memory/runs/` und `memory/freigaben/`, auch gegen Shell-Befehle
+- 9 weitere Tests, zusammen 23
+
+### Geändert
+- README neu, kurz und unter dem Namen banan
+- Link auf das private Whiteboard aus dem README entfernt
+
 ## [0.0.3] – 2026-11-15
 
 ### Hinzugefügt
@@ -48,7 +60,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/atshv/banan/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/atshv/banan/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/atshv/banan/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/atshv/banan/releases/tag/v0.0.1

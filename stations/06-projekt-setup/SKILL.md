@@ -17,7 +17,8 @@ Ohne festes Gerüst richtet jeder Builder-Agent das Projekt anders ein. Das füh
 4. Linter und Formatter einrichten (Web: `npx ultracite init`).
 5. CI anlegen, das bei jedem Push baut, lintet und testet.
 6. `memory/` ins Repo kopieren, `conventions.md` mit Namen und Ordnern füllen.
-7. Prüfen, dass das leere Projekt startet und die CI grün ist.
+7. Test- und Lint-Befehl in `memory/gates.json` eintragen, z. B. `{"test": "npm test", "lint": "npm run lint"}`. Der Tester startet sie später über `factory_run.py`.
+8. Prüfen, dass das leere Projekt startet und die CI grün ist.
 
 ## Output → `handoffs/06-setup.md`
 ```
@@ -28,6 +29,7 @@ Repo · Startbefehl · Testbefehl · Lint-Befehl · CI-Link · Umgebungsvariable
 ## Gate
 - Leeres Projekt startet lokal.
 - CI läuft grün.
+- `memory/gates.json` hat einen echten Testbefehl.
 - Keine Secrets im Repo, nur `.env.example`.
 
 ## Nutzt
