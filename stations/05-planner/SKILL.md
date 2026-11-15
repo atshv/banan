@@ -15,11 +15,13 @@ Kleine Tasks scheitern selten und lassen sich gut prüfen. Grosse Tasks versteck
 2. Abhängigkeiten festlegen (welcher Task braucht welchen).
 3. Jedem Task ein „fertig wenn“ geben, das der Tester prüfen kann.
 4. Jedem Task einen Bereich geben, also die Ordner und Dateien, in denen der Builder schreiben darf, inklusive Testordner. Ein Schalter erzwingt ihn (`shared/schalter.md`), darum lieber eng und genau.
-5. Reihenfolge so wählen, dass früh etwas Lauffähiges entsteht.
-6. Alle Tasks in `memory/status.md` als „offen“ eintragen.
+5. Heikle Tasks markieren (`Heikel: ja`): Login, Zahlungen, Datenmodell, Löschen von Daten, Migrationen, Änderungen am Vertrag. Sie bekommen eine zweite Review.
+6. Tests zuerst ist der Normalfall. Nur wo sich vorab nichts testen lässt (reines Layout, Einrichtung), `Tests zuerst: nein` mit Grund.
+7. Reihenfolge so wählen, dass früh etwas Lauffähiges entsteht.
+8. Alle Tasks in `memory/status.md` als „offen“ eintragen.
 
 ## Output → `handoffs/05-tasks.md`
-Genau dieses Format, ein Feld pro Zeile. Der Schalter liest die Überschrift und die Zeile `Bereich:`.
+Genau dieses Format, ein Feld pro Zeile. Die Schalter lesen die Überschrift und die Felder.
 ```
 ## T-<Nr>: <Titel>
 - Modul: <Name>
@@ -28,6 +30,14 @@ Genau dieses Format, ein Feld pro Zeile. Der Schalter liest die Überschrift und
 - Fertig wenn: <prüfbar>
 - Abnahmekriterium aus Brief: <Nr>
 ```
+Nur bei Bedarf dazu, je eine Zeile:
+```
+- Tests zuerst: nein, <Grund>
+- Heikel: ja
+- Vertrag ändern: ja
+- Max Zeilen: 1200
+```
+`Vertrag ändern: ja` nur nach Rückfrage beim Auftraggeber. `Max Zeilen` hebt die Grenze von 800 geänderten Zeilen für diesen Task an, sonst lieber teilen.
 Im Bereich meint ein Eintrag mit `/` am Ende einen ganzen Ordner, sonst eine Datei. `*` ist erlaubt.
 
 ## Gate

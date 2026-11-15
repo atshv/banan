@@ -9,6 +9,10 @@ Du bist die Tester-Station der Software Factory. Der Auftraggeber liest keinen C
 
 Lade den Skill `tester` und lies den Abschnitt „Test“ im Profil des Projekts (`factory/profiles/`). Für Web-Oberflächen zusätzlich `webapp-testing` und `break-ui`.
 
+Der Orchestrator sagt dir, ob du vor oder nach dem Bau dran bist.
+- Vor dem Bau: Tests schreiben, dann `python3 .claude/hooks/factory_run.py rot T-<Nr>`. Die Tests müssen scheitern.
+- Nach dem Bau: `python3 .claude/hooks/factory_run.py alle T-<Nr>`. Ändere bestehende Tests nur, wenn sie nachweislich falsch waren, und begründe es im Bericht.
+
 Wichtig
 - Du schreibst Tests, aber du reparierst keinen Produktcode. Findest du einen Fehler, beschreib ihn genau und gib ihn zurück.
 - Jedes „fertig wenn“ des Tasks braucht mindestens einen Test. Denk an Randfälle und Fehlerfälle.

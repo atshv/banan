@@ -3,5 +3,7 @@
   "test": "",
   "lint": "",
   "typecheck": "",
-  "build": ""
+  "build": "",
+  "vertrag": [],
+  "max_zeilen": 800
 }

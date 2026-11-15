@@ -157,11 +157,12 @@ def record_approval(root, prompt):
 
 # ---------- Schreiben ----------
 
-def scope(root, no):
-    """Bereich eines Tasks aus 05-tasks.md, None wenn keiner eingetragen ist."""
+def task_fields(root, no):
+    """Felder eines Tasks aus 05-tasks.md als {name in Kleinbuchstaben: wert}."""
+    fields = {}
     text = read(root, TASKS)
     if text is None:
-        return None
+        return fields
     current = None
     for line in text.splitlines():
         h = re.match(r"#{1,6}\s*T-(\d+)\b", line)
@@ -169,11 +170,31 @@ def scope(root, no):
             current = int(h.group(1))
             continue
         if current == no:
-            m = re.match(r"\s*[-*]?\s*\**Bereich\**\s*:\s*\**\s*(.+)$", line, re.I)
+            m = re.match(r"\s*[-*]?\s*\**([^:*]{1,40}?)\**\s*:\s*\**\s*(.+)$", line)
             if m:
-                items = [p.strip().strip("`").strip() for p in m.group(1).split(",")]
-                return [p[2:] if p.startswith("./") else p for p in items if p]
-    return None
+                fields.setdefault(m.group(1).strip().lower(), m.group(2).strip())
+    return fields
+
+
+def path_list(value):
+    items = [p.strip().strip("`").strip() for p in (value or "").split(",")]
+    return [p[2:] if p.startswith("./") else p for p in items if p]
+
+
+def scope(root, no):
+    """Bereich eines Tasks, None wenn keiner eingetragen ist."""
+    return path_list(task_fields(root, no).get("bereich")) or None
+
+
+def says(fields, key, word):
+    return fields.get(key, "").lower().startswith(word)
+
+
+def contract_paths(root):
+    """Vertrags-Dateien aus gates.json (Liste 'vertrag')."""
+    gates = read_json(root, GATES)
+    listed = gates.get("vertrag") if isinstance(gates, dict) else None
+    return path_list(",".join(p for p in listed if isinstance(p, str))) if isinstance(listed, list) else []
 
 
 def in_scope(r, entries):
@@ -216,7 +237,11 @@ def check_write(root, cwd, path):
         return f"Factory-Schalter: {r} wird nur auf main geändert, nicht auf einem Task-Branch."
     if r.startswith("memory/") or os.path.basename(r) in LOCKFILES:
         return None
-    entries = scope(root, no)
+    fields = task_fields(root, no)
+    if in_scope(r, contract_paths(root)) and not says(fields, "vertrag ändern", "ja"):
+        return (f"Factory-Schalter: {r} gehört zum Vertrag (Schnittstellen und Datentypen). T-{no} darf ihn nicht "
+                "ändern. Bau gegen den Vertrag. Muss er sich ändern, stopp und melde es dem Orchestrator.")
+    entries = path_list(fields.get("bereich")) or None
     if entries is None:
         return (f"Factory-Schalter: Task T-{no} hat in {TASKS} keine Zeile 'Bereich:'. "
                 "Stopp und melde das dem Orchestrator. Er trägt den Bereich auf main ein.")
@@ -272,7 +297,7 @@ def reports(root):
     except OSError:
         return found
     for name in names:
-        m = re.match(r"T-(\d+)-(build|review|security)\.md$", name, re.I)
+        m = re.match(r"T-(\d+)-(build|review2?|security)\.md$", name, re.I)
         if m:
             found[(int(m.group(1)), m.group(2).lower())] = f"{REPORTS}/{name}"
     return found
@@ -325,14 +350,22 @@ def check_stop(root):
         elif state == "fertig":
             if (no, "build") not in found:
                 problems.append(f"{label} steht auf 'fertig', aber der Build-Bericht fehlt.")
-            missing = [g for g in required if (no, g) not in runs]
-            red = [g for g in required if runs.get((no, g), 0) != 0]
+            fields = task_fields(root, no)
+            if not says(fields, "tests zuerst", "nein") and runs.get((no, "rot"), 0) == 0:
+                problems.append(f"{label} steht auf 'fertig', aber es gibt keinen roten Testlauf vor dem Bau "
+                                f"(python3 {RUNNER} rot {label}).")
+            needed = required + ["groesse"]
+            missing = [g for g in needed if (no, g) not in runs]
+            red = [g for g in needed if runs.get((no, g), 0) != 0]
             if missing:
                 problems.append(f"{label} steht auf 'fertig', aber diese Prüfungen sind nicht aufgezeichnet: "
                                 f"{', '.join(missing)} (python3 {RUNNER} alle {label}).")
             if red:
                 problems.append(f"{label} steht auf 'fertig', aber diese Prüfungen sind rot: {', '.join(red)}.")
-            for kind, word in (("review", "Review"), ("security", "Security")):
+            checks = [("review", "Review"), ("security", "Security")]
+            if says(fields, "heikel", "ja"):
+                checks.insert(1, ("review2", "zweite Review"))
+            for kind, word in checks:
                 path = found.get((no, kind))
                 if path is None:
                     problems.append(f"{label} steht auf 'fertig', aber der {word}-Bericht fehlt.")

@@ -6,6 +6,19 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.7] – 2026-11-15
+
+### Hinzugefügt
+- Tests zuerst. Der Tester schreibt die Tests vor dem Bau, `factory_run.py rot T-<Nr>` zeichnet auf, dass sie scheitern. Ohne diesen roten Lauf gilt ein Task nicht als fertig. Werden Tests danach geändert, steht das im grünen Lauf, und der Reviewer prüft es.
+- Vertrag. Dateien mit Schnittstellen und Datentypen (`vertrag` in `memory/gates.json`) sind für Builder gesperrt, ausser der Task hat `Vertrag ändern: ja`.
+- Grössengrenze. Ändert ein Task mehr als 800 Zeilen, ist er nicht fertig und wird geteilt.
+- Zweite Review für Tasks mit `Heikel: ja`, mit dem Auftrag, den Code zu brechen
+- 5 weitere Tests, zusammen 30
+
+### Geändert
+- Task-Schleife: Tester (rot) → Builder → Tester (alle Prüfungen) → Reviewer → Security
+- Architektur legt den Vertrag fest, Setup legt die Dateien an
+
 ## [0.0.6] – 2026-11-15
 
 ### Hinzugefügt
@@ -77,7 +90,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/atshv/banan/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/atshv/banan/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/atshv/banan/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/atshv/banan/compare/v0.0.3...v0.0.4

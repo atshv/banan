@@ -15,9 +15,23 @@ TASKS = """# Tasks
 - Modul: auth
 - Bereich: src/login/, tests/login/, app/page.tsx, `src/lib/*.ts`
 - Fertig wenn: Login geht
+- Tests zuerst: nein, reines Layout
 
 ## T-002: Ohne Bereich
 - Modul: x
+
+## T-003: Rechner
+- Bereich: src/
+- Fertig wenn: rechnet
+
+## T-004: Zahlung
+- Bereich: src/
+- Tests zuerst: nein
+- Heikel: ja
+
+## T-005: Vertrag anpassen
+- Bereich: src/
+- Vertrag ändern: ja
 """
 
 
@@ -146,7 +160,7 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(self.run_runner("test", "T-001").returncode, 1)
         self.assertIn("rot: test", self.run_guard("stop")[1])
         self.write("memory/gates.json", json.dumps({"test": "echo alles gut"}))
-        self.assertEqual(self.run_runner("test", "T-001").returncode, 0)
+        self.assertEqual(self.run_runner("alle", "T-001").returncode, 0)
         self.assertEqual(self.run_guard("stop")[0], 0)
         self.write("memory/handoffs/tasks/T-001-security.md", "**Ergebnis:** abgelehnt")
         self.assertIn("Security", self.run_guard("stop")[1])
@@ -190,6 +204,78 @@ class GuardTest(unittest.TestCase):
         r = self.run_runner("alle", "T-001")
         self.assertEqual(r.returncode, 65)
         self.assertIn("lint", r.stderr)
+
+    # Präziser Code
+    def done(self, task):
+        self.status(f"| {task} | X | fertig |\n")
+        for kind in ("build", "review", "security"):
+            self.write(f"memory/handoffs/tasks/{task}-{kind}.md", "Ergebnis: ok")
+
+    def gates(self, **data):
+        self.write("memory/gates.json", json.dumps(data))
+
+    def record(self, name):
+        with open(os.path.join(self.root, "memory/runs", name), encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_tests_must_fail_before_the_build(self):
+        self.done("T-003")
+        self.gates(test="true")
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 0)
+        self.assertIn("roten Testlauf", self.run_guard("stop")[1])
+        self.assertEqual(self.run_runner("rot", "T-003").returncode, 1, "grüne Tests vor dem Bau zählen nicht")
+        self.assertIn("roten Testlauf", self.run_guard("stop")[1])
+        self.gates(test="false")
+        self.assertEqual(self.run_runner("rot", "T-003").returncode, 0)
+        self.gates(test="true")
+        self.assertIn("bleibt bestehen", self.run_runner("rot", "T-003").stdout)
+        self.assertEqual(self.record("T-003-rot.json")["exit"], 1)
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 0)
+        self.assertEqual(self.run_guard("stop")[0], 0)
+
+    def test_tests_changed_after_red_run_are_flagged(self):
+        self.gates(test="false")
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.write("src/a.test.ts", "erwartet 4")
+        self.write("src/b.test.ts", "erwartet 5")
+        self.run_runner("rot", "T-003")
+        self.write("src/a.test.ts", "erwartet irgendwas")
+        self.gates(test="true")
+        r = self.run_runner("test", "T-003")
+        self.assertEqual(self.record("T-003-test.json")["tests_seit_rot_geaendert"], ["src/a.test.ts"])
+        self.assertIn("abgeschwächt", r.stdout)
+
+    def test_task_size_limit(self):
+        self.gates(test="true", max_zeilen=10)
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.write("src/big.ts", "x\n" * 30)
+        r = self.run_runner("alle", "T-003")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("zu gross", r.stdout)
+        self.assertEqual(self.record("T-003-groesse.json")["zeilen"], 30)
+        self.gates(test="true", max_zeilen=100)
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 0)
+
+    def test_contract_is_locked(self):
+        self.gates(test="true", vertrag=["src/contracts/"])
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.assertFalse(self.can_write("src/contracts/api.ts"))
+        self.assertTrue(self.can_write("src/rechner.ts"))
+        sh(self.root, "checkout", "-q", "-b", "task/T-005-vertrag")
+        self.assertTrue(self.can_write("src/contracts/api.ts"))
+
+    def test_risky_task_needs_second_review(self):
+        self.done("T-004")
+        self.gates(test="true")
+        self.run_runner("alle", "T-004")
+        code, err = self.run_guard("stop")
+        self.assertEqual(code, 2)
+        self.assertIn("zweite Review", err)
+        self.write("memory/handoffs/tasks/T-004-review2.md", "Ergebnis: ok")
+        self.assertEqual(self.run_guard("stop")[0], 0)
 
     def test_runner_needs_a_command(self):
         self.assertEqual(self.run_runner("test", "T-001").returncode, 65)

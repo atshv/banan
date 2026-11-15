@@ -13,6 +13,12 @@ Ein Task ist erst fertig, wenn ein Test es beweist. „Sieht gut aus“ zählt n
 - Build-Bericht `handoffs/tasks/T-<Nr>-build.md`
 
 ## Ablauf
+Der Tester kommt zweimal dran, vor und nach dem Bau.
+
+**Vor dem Bau**
+- Tests für den Task schreiben (Schritte 1 und 2) und mit `python3 .claude/hooks/factory_run.py rot T-<Nr>` zeigen, dass sie scheitern. Das beweist, dass sie wirklich das Neue prüfen. Entfällt bei `Tests zuerst: nein`.
+
+**Nach dem Bau**
 1. Aus „fertig wenn“ und Abnahmekriterien Testfälle ableiten, auch Randfälle und Fehlerfälle.
 2. Tests schreiben (Unit, und für UI End-to-End mit Playwright).
 3. Web-UI erst ansehen, dann klicken: Seite laden, auf `networkidle` warten, Screenshot, dann Selektoren wählen.
