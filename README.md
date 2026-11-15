@@ -1,10 +1,22 @@
-# 🍌 banan
+<p align="center">
+  <img src="docs/images/banner.svg" alt="banan – die schlanke KI-Software-Factory für Claude Code" width="100%">
+</p>
 
-**Eine schlanke KI-Software-Factory für Claude Code.** Du beschreibst deine Idee, banan führt sie durch 15 Stationen bis zur fertigen App. Du entscheidest nur an vier Stellen.
+<p align="center">
+  <a href="https://github.com/atshv/banan/tags"><img alt="Version" src="https://img.shields.io/github/v/tag/atshv/banan?style=flat-square&label=version&color=FFD23F&labelColor=0E1014"></a>
+  <img alt="Claude Code" src="https://img.shields.io/badge/Claude%20Code-ready-d97757?style=flat-square&labelColor=0E1014">
+  <img alt="Stationen" src="https://img.shields.io/badge/Stationen-15-FFD23F?style=flat-square&labelColor=0E1014">
+  <img alt="Abhängigkeiten" src="https://img.shields.io/badge/Abh%C3%A4ngigkeiten-keine-34d399?style=flat-square&labelColor=0E1014">
+</p>
 
-Version siehe [`VERSION`](VERSION) · Änderungen im [`CHANGELOG.md`](CHANGELOG.md) · vor v1.0.0 Entwicklungsstand
+<p align="center">
+  <b>Du beschreibst deine Idee. banan baut sie Station für Station bis zur fertigen App.</b><br>
+  Du entscheidest nur an vier Stellen. Den Rest prüft die Factory selbst.
+</p>
 
-## Start
+<br>
+
+## 🚀 Start
 
 ```bash
 git clone https://github.com/atshv/banan
@@ -12,43 +24,43 @@ cd banan
 ./install.sh ~/Projekte/meine-app
 ```
 
-Danach im Projektordner Claude Code starten und `/factory-start` eingeben. Gebraucht werden Git und Python 3.
+Dann im Projektordner Claude Code öffnen und `/factory-start` eingeben. Du brauchst nur Git und Python 3.
+
+## 💬 Bedienung
 
 | Du gibst ein | Was passiert |
-|---|---|
+|:--|:--|
 | `/factory-start` | Interview zu deiner Idee, daraus entsteht der Brief |
 | `/factory-weiter` | Arbeitet weiter bis zur nächsten Entscheidung |
 | `/factory-status` | Stand in einfacher Sprache |
 | `/factory-release` | Liefert die nächste Version aus |
-| `Freigabe Brief` | Deine Freigabe. Auch `Architektur`, `Design`, `Release` |
+| `Freigabe Brief` | Deine Freigabe, auch für `Architektur`, `Design` und `Release` |
 
-## Die Linie
+## 🏭 Die Linie
 
-| Phase | Stationen |
-|---|---|
-| Planen | 1 Brief · 2 Research · 3 Architektur · 4 Design · 5 Plan |
-| Ausrüsten | 6 Setup · 7 Skills · 8 Agents |
-| Bauen & prüfen | 9 Builder · 10 Tester · 11 Reviewer · 12 Security |
-| Ausliefern | 13 Release · 14 Doku |
-| Betreiben | 15 Betrieb, Bugs und Feedback werden zum nächsten Brief |
+<p align="center">
+  <img src="docs/images/line.svg" alt="15 Stationen in 5 Phasen: Planen, Ausrüsten, Bauen und prüfen, Ausliefern, Betreiben" width="100%">
+</p>
 
-Scheitert ein Task dreimal, kommt er zu dir. Fehler aus Review und Test werden zu Lessons und daraus zu besseren Skills.
+Scheitert ein Task dreimal, kommt er zu dir.
 
-## Schalter statt Vertrauen
+## 🔒 Schalter statt Vertrauen
 
-Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. Es kostet keine Tokens, solange es nichts blockiert.
+Die wichtigsten Regeln erzwingt ein kleines Programm, nicht nur eine Anweisung. Solange es nichts blockiert, kostet es keine Tokens.
 
-- Kein Produktcode direkt auf `main`
-- Ein Builder schreibt nur im Bereich seines Tasks
-- „Fertig“ gilt nur mit aufgezeichnetem, grünem Testlauf und bestandenem Review
-- Weiter geht es nur mit deiner Freigabe, die KI kann sie sich nicht selbst geben
+| | |
+|:--|:--|
+| 🌿 **Geschützter Hauptzweig**<br>Kein Produktcode direkt auf `main` | 📦 **Task-Bereich**<br>Ein Builder schreibt nur in den Ordnern seines Tasks |
+| ✅ **Echte Nachweise**<br>„Fertig“ gilt nur mit aufgezeichnetem, grünem Testlauf | 🙋 **Deine Freigabe**<br>Die KI kann sich nicht selbst freigeben |
 
-Details und Grenzen in [`shared/schalter.md`](shared/schalter.md).
+Details und Grenzen stehen in [`shared/schalter.md`](shared/schalter.md).
 
-## Aufbau
+<details>
+<summary><b>📁 Was im Repo liegt</b></summary>
+<br>
 
 | Ordner | Inhalt |
-|---|---|
+|:--|:--|
 | [`stations/`](stations) | 15 Stationen, je eine `SKILL.md` |
 | [`shared/`](shared) | Regeln für alle Stationen |
 | [`memory/`](memory) | Vorlagen fürs Projekt-Gedächtnis |
@@ -58,6 +70,16 @@ Details und Grenzen in [`shared/schalter.md`](shared/schalter.md).
 
 `install.sh` kann jederzeit wieder laufen und aktualisiert banan im Projekt. Dein Projekt-Gedächtnis und eigene Einstellungen bleiben erhalten.
 
-## Herkunft
+</details>
 
-Skill-Muster aus [anthropics/skills](https://github.com/anthropics/skills), Design-Regeln aus [magicuidesign/magicui](https://github.com/magicuidesign/magicui).
+<br>
+
+<p align="center">
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="shared/versionierung.md">Versionen</a> ·
+  vor v1.0.0 Entwicklungsstand
+</p>
+
+<p align="center">
+  <sub>Skill-Muster aus <a href="https://github.com/anthropics/skills">anthropics/skills</a> · Design-Regeln aus <a href="https://github.com/magicuidesign/magicui">magicuidesign/magicui</a></sub>
+</p>
