@@ -6,6 +6,24 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.8] – 2026-11-15
+
+### Hinzugefügt
+- banan läuft mit jeder KI, nicht mehr nur mit Claude Code. `./install.sh <Ordner> cursor,codex` wählt die KIs: `claude`, `cursor`, `gemini`, `codex`, `deepseek`, `andere`.
+- Anleitung für den Orchestrator als `AGENTS.md`, das alle lesen. `CLAUDE.md` und `GEMINI.md` verweisen darauf.
+- Skills für alle anderen KIs in `.agents/skills/`
+- Hooks für Cursor (`.cursor/hooks.json`), Gemini CLI (`.gemini/settings.json`) und Codex (`.codex/hooks.json`). Der Schalter versteht deren Eingaben, bei Codex auch Patches mit mehreren Dateien.
+- Git-Schalter. Jeder Commit läuft durch dieselben Schreibregeln, egal welche KI ihn macht. `--no-verify` ist gesperrt.
+- Freigabe im eigenen Terminal mit `python3 .banan/freigabe.py brief`, für KIs ohne Hooks. Läuft nur in einem echten Terminal.
+- `python3 .banan/factory_guard.py pruefe` als Stop-Check auf Anweisung
+- Rollen der Sub-Agents als Dateien in `.banan/rollen/` für KIs ohne benannte Sub-Agents
+- 6 weitere Tests, zusammen 36
+
+### Geändert
+- Schalter und Werkzeuge liegen im Projekt neu in `.banan/` statt `.claude/hooks/`. `install.sh` räumt den alten Ort auf.
+- Ordner `engine/claude-code/` heisst `engine/`, mit `engine/adapter/` je KI
+- README und Banner nennen alle KIs
+
 ## [0.0.7] – 2026-11-15
 
 ### Hinzugefügt
@@ -90,7 +108,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.8...HEAD
+[0.0.8]: https://github.com/atshv/banan/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/atshv/banan/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/atshv/banan/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/atshv/banan/compare/v0.0.4...v0.0.5

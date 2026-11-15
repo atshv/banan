@@ -1,0 +1,4 @@
+#!/bin/sh
+# banan: dieselben Schreibregeln für jeden Commit, egal welche KI ihn macht.
+command -v python3 >/dev/null 2>&1 || exit 0
+exec python3 "$(git rev-parse --show-toplevel)/.banan/factory_guard.py" commit

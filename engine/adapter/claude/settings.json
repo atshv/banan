@@ -14,27 +14,27 @@
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/factory_guard.py\" write", "timeout": 15 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.banan/factory_guard.py\" write", "timeout": 15 }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/factory_guard.py\" bash", "timeout": 15 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.banan/factory_guard.py\" bash", "timeout": 15 }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/factory_guard.py\" prompt", "timeout": 15 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.banan/factory_guard.py\" prompt", "timeout": 15 }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/factory_guard.py\" stop", "timeout": 15 }
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.banan/factory_guard.py\" stop", "timeout": 15 }
         ]
       }
     ]
