@@ -1,0 +1,34 @@
+---
+name: projekt-setup
+description: Richtet Repo, Ordnerstruktur, Abhängigkeiten, CI und Entwicklungsumgebung ein, bevor der erste Builder startet. Nutze diesen Skill einmal pro Projekt nach dem Planner und immer, wenn ein neues Teilprojekt (z. B. Backend) dazukommt. So arbeiten alle Builder im gleichen Gerüst.
+---
+
+# 6 Projekt-Setup
+
+Ohne festes Gerüst richtet jeder Builder-Agent das Projekt anders ein. Das führt zu Chaos und doppeltem Code.
+
+## Input
+- `handoffs/03-architektur.md` (Stack, Ordnerstruktur)
+
+## Ablauf
+1. Repo anlegen, Branch-Regeln aus `shared/git-strategie.md` einrichten.
+2. Grundgerüst mit dem offiziellen Init-Befehl des Stacks erzeugen (z. B. `npx create-next-app`, Xcode-Vorlage).
+3. Web-Apps: `npx shadcn@latest init`, danach Tailwind und Design-Tokens aus `design/design-regeln.md`.
+4. Linter und Formatter einrichten (Web: `npx ultracite init`).
+5. CI anlegen, das bei jedem Push baut, lintet und testet.
+6. `memory/` ins Repo kopieren, `conventions.md` mit Namen und Ordnern füllen.
+7. Prüfen, dass das leere Projekt startet und die CI grün ist.
+
+## Output → `handoffs/06-setup.md`
+```
+# Setup: <Projekt>
+Repo · Startbefehl · Testbefehl · Lint-Befehl · CI-Link · Umgebungsvariablen (nur Namen, keine Werte)
+```
+
+## Gate
+- Leeres Projekt startet lokal.
+- CI läuft grün.
+- Keine Secrets im Repo, nur `.env.example`.
+
+## Nutzt
+`web-artifacts-builder` (Init-Script als Vorbild)
