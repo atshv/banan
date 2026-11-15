@@ -14,7 +14,7 @@ Ein Task aufs Mal. So bleibt jede Änderung klein genug, dass Tester und Reviewe
 
 ## Ablauf
 1. Eigenen Branch nach `shared/git-strategie.md` anlegen.
-2. Nur Dateien ändern, die zum Task gehören.
+2. Nur Dateien im „Bereich“ des Tasks ändern. Ein Schalter blockiert alles andere. Reicht der Bereich nicht, stoppen und dem Orchestrator melden, er erweitert ihn auf `main`.
 3. Web-UI: Komponenten über `npx shadcn@latest add @magicui/<name>` holen, per Props und className anpassen, nicht im Registry-Code.
 4. Lokal starten, Lint laufen lassen, eigene Schnelltests machen.
 5. Commit mit Task-Nummer, Übergabe an den Tester.

@@ -67,6 +67,9 @@ Der Motor ist Claude Code. Er liegt in `engine/claude-code/` und wird mit `insta
 
 `install.sh` kann jederzeit wieder laufen, um die Factory im Projekt zu aktualisieren. Dein Projekt-Gedächtnis, deine `settings.json` und eigene Abschnitte in `CLAUDE.md` bleiben dabei erhalten.
 
+### Schalter
+Drei Regeln erzwingt ein kleines Programm statt nur eine Anweisung. Kein Produktcode direkt auf `main`, Schreiben nur im Bereich des Tasks, kein Aufhören mit offenen Tasks oder „fertig“ ohne Nachweise. Details und Grenzen in `shared/schalter.md`. Die Schalter brauchen `python3`.
+
 ### Was im Projekt landet
 ```
 meine-app/
@@ -74,6 +77,7 @@ meine-app/
 ├── .claude/skills/      15 Stationen, 4 Befehle, übernommene Skills
 ├── .claude/agents/      Researcher, Builder, Tester, Reviewer, Security
 ├── .claude/settings.json  Sperren (kein Force-Push, kein .env lesen, kein rm -rf)
+├── .claude/hooks/       Schalter, die drei Regeln per Programm erzwingen
 ├── factory/             Regeln und Design-Vorgaben der Factory
 └── memory/              Projekt-Gedächtnis und Übergaben
 ```

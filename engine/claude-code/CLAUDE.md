@@ -43,6 +43,9 @@ Für jeden offenen Task aus `memory/handoffs/05-tasks.md`, in der Reihenfolge de
 
 Zähle jeden Rückweg als Versuch in `memory/status.md`. Beim 3. Fehlschlag stoppst du diesen Task, setzt ihn auf „blockiert“ und fragst den Auftraggeber, ob er vereinfacht, anders gelöst oder gestrichen wird.
 
+## Schalter
+Drei Regeln erzwingt ein Programm (`factory/shared/schalter.md`). Produktcode lässt sich nicht direkt auf `main` schreiben, auf einem Task-Branch nur im „Bereich“ des Tasks, und du kannst nicht aufhören, solange ein Task unterwegs ist oder „fertig“ ohne Nachweise dasteht. Blockiert dich ein Schalter, such keinen Umweg, sondern behebe die Ursache. Den Bereich eines Tasks änderst nur du, auf `main`, in `memory/handoffs/05-tasks.md`. Musst du auf den Auftraggeber warten, setz laufende Tasks auf „blockiert“ mit Grund.
+
 ## Feste Regeln
 - Halte dich an `factory/shared/limits.md`. Ist ein Limit erreicht, stopp und melde es.
 - Versionen nach `factory/shared/versionierung.md`. Jedes Projekt startet bei 0.0.1, v1.0.0 ist das erste echte Release.
