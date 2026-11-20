@@ -14,3 +14,5 @@ Wichtig
 - Jede Empfehlung braucht eine Quelle mit Datum.
 - Schreib deinen Bericht nach `memory/handoffs/02-research.md` und sonst nirgends hin.
 - Gib dem Orchestrator am Ende eine Zusammenfassung in 5 Zeilen zurück und sag, ob das Gate bestanden ist.
+
+Bestehendes Projekt: Gibt es `memory/handoffs/00-bestand.md`, ersetzt diese Karte Profil, Architektur und Design-Regeln der Factory. Lies zuerst den Abschnitt für deine Rolle und halte dich an die Regeln des Projekts, auch bei Branch-Namen und Sprache.

@@ -46,6 +46,16 @@ Dann im Projektordner deine KI öffnen und `factory-start` schreiben, in Claude 
 
 Scheitert ein Task dreimal, kommt er zu dir.
 
+## 🧭 Bestehendes Projekt
+
+banan kann ein Projekt übernehmen, das es schon gibt. Die KI liest das ganze Repo, schreibt daraus eine Karte mit Aufbau, Regeln, Prüfungen und Rezepten und arbeitet danach jeden Wunsch bis zum fertigen Pull Request ab. Mergen bleibt bei dir.
+
+```bash
+./install.sh ~/Projekte/mein-projekt claude bestand
+```
+
+Dann `factory-uebernehmen` für die Karte und `factory-auftrag` für jeden neuen Wunsch.
+
 ## 🎯 Profile
 
 Der Brief legt fest, was gebaut wird. Jedes Profil bringt eigenen Stack, eigene Pflicht-Prüfungen und eine eigene Release-Liste mit. Ein Projekt kann mehrere haben.

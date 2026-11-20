@@ -436,6 +436,85 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(self.guard("bash", tool_input={"command": "python3 .banan/factory_guard.py pruefe"}).returncode, 0)
         self.assertEqual(self.guard("bash", tool_input={"command": "git commit --no-verify -m x"}).returncode, 2)
 
+    # Bestehendes Projekt
+    def bash(self, command):
+        return self.run_guard("bash", tool_input={"command": command})[0] == 0
+
+    def test_existing_project_needs_survey_then_brief(self):
+        self.gates(modus="bestand")
+        self.assertFalse(self.can_write("memory/handoffs/01-brief.md"), "erst die Freigabe Bestand")
+        self.write("memory/handoffs/00-bestand.md", "Karte")
+        self.run_guard("prompt", prompt="Freigabe Bestand")
+        self.assertTrue(self.can_write("memory/handoffs/01-brief.md"))
+        self.assertFalse(self.can_write("memory/handoffs/05-tasks.md"), "erst die Freigabe Brief")
+        self.write("memory/handoffs/01-brief.md", "Auftrag")
+        self.run_guard("prompt", prompt="Freigabe Brief")
+        self.assertTrue(self.can_write("memory/handoffs/05-tasks.md"), "ohne Architektur und Design")
+        self.write("memory/handoffs/00-bestand.md", "Karte, geändert")
+        self.assertFalse(self.can_write("memory/handoffs/01-brief.md"))
+
+    def test_any_branch_with_a_task_number_is_a_task_branch(self):
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "feature/T-001-login")
+        self.assertTrue(self.can_write("src/login/form.tsx"))
+        self.assertFalse(self.can_write("src/profile/x.tsx"))
+        sh(self.root, "checkout", "-q", "-b", "feature/NOT-1-x")
+        self.assertTrue(self.can_write("src/profile/x.tsx"))
+
+    def test_pull_request_mode_plans_on_the_branch_once(self):
+        self.gates(abschluss="pr", modus="bestand")
+        self.write("memory/handoffs/01-brief.md", "Auftrag")
+        self.run_guard("prompt", prompt="Freigabe Brief")
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "feature/T-006-lasso")
+        self.assertTrue(self.can_write("memory/handoffs/05-tasks.md"), "T-006 ist noch nicht geplant")
+        self.assertFalse(self.can_write("memory/gates.json"))
+        self.write("memory/handoffs/05-tasks.md", TASKS + "\n## T-006: Lasso\n- Bereich: src/lasso/\n")
+        self.assertTrue(self.can_write("memory/handoffs/05-tasks.md"), "bis zum Commit des Plans")
+        self.commit()
+        self.assertFalse(self.can_write("memory/handoffs/05-tasks.md"), "danach gesperrt")
+        self.assertTrue(self.can_write("src/lasso/a.ts"))
+        self.assertFalse(self.can_write("src/login/a.ts"))
+
+    def test_pull_request_mode_leaves_merging_and_tags_to_people(self):
+        self.commit()
+        for cmd in ("git merge feature/T-001-x", "git push origin main", "git push", "git tag v1.0.0",
+                    "gh pr merge 12 --squash", "gh release create v1"):
+            self.gates(abschluss="pr")
+            self.assertFalse(self.bash(cmd), cmd)
+        for cmd in ("git merge --ff-only origin/main", "git tag --list", "git fetch origin", "gh pr create --fill",
+                    "gh pr view 3 --json state"):
+            self.assertTrue(self.bash(cmd), cmd)
+        sh(self.root, "checkout", "-q", "-b", "feature/T-001-login")
+        for cmd in ("git push -u origin feature/T-001-login", "git push", "git merge origin/main"):
+            self.assertTrue(self.bash(cmd), cmd)
+        self.assertFalse(self.bash("git push origin HEAD:main"))
+        self.write("memory/freigaben/release-1.json", "{}")
+        self.assertFalse(self.bash("git tag v1.0.0"), "auch mit Freigabe setzt die KI keinen Tag")
+
+    def test_conditional_gates_run_only_for_matching_files(self):
+        self.gates(pflicht=["native"], test="true", native="false", wenn={"native": ["core/", "*.cpp"]})
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.write("src/a.ts", "x")
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 0)
+        self.assertTrue(self.record("T-003-native.json")["uebersprungen"])
+        self.write("src/deep/b.cpp", "x")
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 1)
+        self.assertNotIn("uebersprungen", self.record("T-003-native.json"))
+
+    def test_size_ignores_listed_files(self):
+        self.gates(test="true", max_zeilen=5, zaehlt_nicht=["fixtures/", "*.snap"])
+        self.commit()
+        sh(self.root, "checkout", "-q", "-b", "task/T-003-rechner")
+        self.write("fixtures/big.json", "x\n" * 50)
+        self.write("src/a.snap", "x\n" * 50)
+        self.write("src/a.ts", "x\n" * 4)
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 0)
+        self.assertEqual(self.record("T-003-groesse.json")["zeilen"], 4)
+        self.write("src/b.ts", "x\n" * 4)
+        self.assertEqual(self.run_runner("alle", "T-003").returncode, 1)
+
     def test_broken_input_never_blocks(self):
         r = subprocess.run([sys.executable, GUARD, "write"], input="kein json", capture_output=True, text=True)
         self.assertEqual(r.returncode, 0)

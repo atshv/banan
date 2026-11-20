@@ -10,6 +10,10 @@ Ohne Hooks, fuer jede KI:
   factory_guard.py commit              als Git pre-commit   -> dieselben Schreibregeln fuer alles, was committet wird
   factory_guard.py pruefe              von Hand oder durch die KI -> dieselbe Pruefung wie stop
 
+Zwei Schalter in memory/gates.json stellen die Factory auf ein bestehendes Projekt ein:
+  "modus": "bestand"   -> Freigabe Bestand vor dem ersten Auftrag, Freigabe Brief vor dem Plan
+  "abschluss": "pr"    -> die KI oeffnet Pull Requests, mergen, taggen und veroeffentlichen macht ein Mensch
+
 NAME ist claude (Standard), cursor, gemini oder codex.
 Exit 0 = erlaubt. Exit 2 = blockiert, der Text auf stderr geht an die KI.
 Bei einem eigenen Fehler laesst das Script alles durch, damit es nie die Arbeit lahmlegt.
@@ -46,6 +50,7 @@ PASS = {"ok", "grün", "gruen"}
 
 # Checkpoint -> Datei, die der Auftraggeber freigibt
 CHECKPOINTS = {
+    "bestand": "memory/handoffs/00-bestand.md",
     "brief": "memory/handoffs/01-brief.md",
     "architektur": "memory/handoffs/03-architektur.md",
     "design": "memory/handoffs/04-design.md",
@@ -55,6 +60,12 @@ NEEDS = {
     "memory/handoffs/02-research.md": "brief",
     "memory/handoffs/04-design.md": "architektur",
     TASKS: "design",
+}
+# Dasselbe fuer ein bestehendes Projekt ("modus": "bestand"): Architektur und Design gibt es schon.
+NEEDS_BESTAND = {
+    "memory/handoffs/01-brief.md": "bestand",
+    "memory/handoffs/02-research.md": "brief",
+    TASKS: "brief",
 }
 
 
@@ -109,8 +120,30 @@ def is_protected(r):
 
 
 def task_no(name):
-    m = re.match(r"task/T-(\d+)", name or "", re.I)
+    """Task-Nummer aus dem Branch, z. B. task/T-12-login oder feature/T-12-login."""
+    m = re.search(r"(?:^|/)T-(\d+)", name or "", re.I)
     return int(m.group(1)) if m else None
+
+
+def setting(root, key):
+    """Einstellung aus gates.json als Kleinbuchstaben-Text, sonst ''."""
+    gates = read_json(root, GATES)
+    value = gates.get(key) if isinstance(gates, dict) else None
+    return value.strip().lower() if isinstance(value, str) else ""
+
+
+def needs(root):
+    return NEEDS_BESTAND if setting(root, "modus") == "bestand" else NEEDS
+
+
+def by_pr(root):
+    return setting(root, "abschluss") == "pr"
+
+
+def planned(root, no):
+    """True, wenn T-<no> im letzten Commit schon in der Taskliste steht."""
+    text = git(root, "show", f"HEAD:{TASKS}") or ""
+    return any(int(n) == no for n in re.findall(r"^#{1,6}\s*T-(\d+)\b", text, re.M))
 
 
 # ---------- Freigaben ----------
@@ -134,7 +167,7 @@ def release_approved(root):
 
 def record_approval(root, prompt):
     """Zeichnet 'Freigabe <Checkpoint>' auf. Gibt den Text fuer die KI zurueck oder None."""
-    m = re.match(r"\s*freigabe\s*:?\s+(brief|architektur|design|release)\s*[.!]?\s*$", prompt or "", re.I)
+    m = re.match(r"\s*freigabe\s*:?\s+(bestand|brief|architektur|design|release)\s*[.!]?\s*$", prompt or "", re.I)
     if not m:
         return None
     name = m.group(1).lower()
@@ -224,7 +257,7 @@ def check_write(root, cwd, path, tool=True):
     if tool and is_protected(r):
         return (f"Factory-Schalter: {r} gehört zu den Schaltern und Nachweisen der Factory. "
                 "Die KI ändert sie nicht von Hand.")
-    need = NEEDS.get(r)
+    need = needs(root).get(r)
     if need and not approved(root, need):
         return (f"Factory-Schalter: {r} braucht zuerst die Freigabe '{need.capitalize()}' des Auftraggebers "
                 f"für den heutigen Stand von {CHECKPOINTS[need]}. Zeig ihm das Ergebnis in einfacher Sprache "
@@ -236,12 +269,17 @@ def check_write(root, cwd, path, tool=True):
         if is_admin(r):
             return None
         return (f"Factory-Schalter: {r} ist Produktcode und darf nicht direkt auf {b} geändert werden. "
-                "Wechsle auf einen Branch (task/T-<Nr>-<kurzname> oder setup/<name>) und arbeite dort.")
+                "Wechsle auf einen Branch (z. B. task/T-<Nr>-<kurzname> oder setup/<name>) und arbeite dort.")
     no = task_no(b)
     if no is None:
         return None
+    if r == TASKS and by_pr(root):
+        if planned(root, no):
+            return (f"Factory-Schalter: T-{no} ist geplant und committet, die Taskliste ist auf diesem Branch "
+                    "gesperrt. Braucht der Task mehr, stopp und melde es dem Orchestrator.")
+        return None
     if r in (TASKS, GATES):
-        return f"Factory-Schalter: {r} wird nur auf main geändert, nicht auf einem Task-Branch."
+        return f"Factory-Schalter: {r} wird nicht auf einem Task-Branch geändert."
     if r.startswith("memory/") or os.path.basename(r) in LOCKFILES:
         return None
     fields = task_fields(root, no)
@@ -260,6 +298,30 @@ def check_write(root, cwd, path, tool=True):
 
 # ---------- Shell ----------
 
+LISTING = {"-l", "--list", "-n", "-v", "--verify", "--contains", "--points-at"}
+
+
+def check_human_only(root, command, tag):
+    """Abschluss per Pull Request: mergen, taggen und veroeffentlichen macht ein Mensch."""
+    human = ("Factory-Schalter: In diesem Projekt {was} nur ein Mensch. Öffne einen Pull Request, halte ihn grün "
+             "und sag dem Auftraggeber, dass er bereit ist.")
+    if tag:
+        args = tag.group(1).split()
+        if args and not LISTING.intersection(args):
+            return human.format(was="setzt und löscht Tags")
+    if re.search(r"\bgh\b[^|;&\n]*\b(pr\s+merge|release\s+(create|edit|delete|upload))\b", command):
+        return human.format(was="mergt und veröffentlicht")
+    on_main = branch(root) in MAIN
+    if on_main and re.search(r"\bgit\b[^|;&\n]*\bmerge\b(?![^|;&\n]*--(?:abort|ff-only))", command):
+        return human.format(was="mergt nach main")
+    push = re.search(r"\bgit\b[^|;&\n]*?\bpush\b([^|;&\n]*)", command)
+    if push:
+        words = [w for w in push.group(1).split() if not w.startswith("-")]
+        targets = [w.split(":")[-1] for w in words[1:]]
+        if any(t in MAIN for t in targets) or (on_main and not targets):
+            return human.format(was="bringt Code nach main")
+    return None
+
 def check_bash(root, command):
     command = command or ""
     rest = command.replace(RUNNER, "").replace(CHECKER, "")
@@ -268,7 +330,12 @@ def check_bash(root, command):
             return (f"Factory-Schalter: Shell-Befehle fassen {p} nicht an. Lies solche Dateien mit dem "
                     f"Lese-Werkzeug. Testläufe zeichnet nur 'python3 {RUNNER} <gate> <T-Nr>' auf.")
     tag = re.search(r"\bgit\b[^|;&\n]*?\btag\b([^|;&\n]*)", command)
-    if tag:
+    pr = by_pr(root)
+    if pr:
+        reason = check_human_only(root, command, tag)
+        if reason:
+            return reason
+    if tag and not pr:
         args = tag.group(1).split()
         listing = {"-l", "--list", "-d", "--delete", "-n", "-v", "--verify", "--contains", "--points-at"}
         if args and not listing.intersection(args) and not release_approved(root):

@@ -6,6 +6,22 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 
 ## [Unreleased]
 
+## [0.0.9] – 2026-11-20
+
+### Hinzugefügt
+- Bestehende Projekte. `./install.sh <Ordner> <KI> bestand` richtet banan für ein Projekt ein, das es schon gibt, mit eigener Anleitung (`engine/AGENTS-bestand.md`) und ohne Profile und Design-Regeln von banan.
+- `factory-uebernehmen` liest das Repo und schreibt die Karte des Projekts (`memory/handoffs/00-bestand.md`), die Prüfungen und den Vertrag. Neue `Freigabe Bestand`.
+- `factory-auftrag` nimmt einen Wunsch auf. Der Plan braucht danach nur die `Freigabe Brief`.
+- Abschluss per Pull Request (`"abschluss": "pr"`). Mergen nach `main`, Tags und Veröffentlichen sind für die KI gesperrt. Brief und Tasks reisen als erster Commit auf dem Task-Branch mit.
+- Prüfungen mit Bedingung (`wenn`) laufen nur, wenn der Task passende Dateien ändert.
+- `zaehlt_nicht` nimmt erzeugte Dateien und Testdaten aus der Grössengrenze.
+- `memory/skills.txt` wählt, welche Skills von banan ein bestehendes Projekt bekommt.
+- 6 weitere Tests, zusammen 42
+
+### Geändert
+- Jeder Branch mit `T-<Nr>` nach einem `/` gilt als Task-Branch, also auch `feature/T-012-lasso`.
+- Die Grösse eines Tasks misst sich am nächsten Abzweigpunkt, auch gegenüber `origin/main`.
+
 ## [0.0.8] – 2026-11-15
 
 ### Hinzugefügt
@@ -108,7 +124,8 @@ Vor v1.0.0 ist alles Entwicklungsstand. v1.0.0 ist das erste echte Release.
 ### Behoben
 - Ordner- und Dateinamen in `vendor-skills/anthropic/` hatten nach dem Upload Zeitstempel im Namen (z. B. `skill-creator 19.24.30`). Sie heissen wieder wie im Original, sonst finden Agents die Skills nicht.
 
-[Unreleased]: https://github.com/atshv/banan/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/atshv/banan/compare/v0.0.9...HEAD
+[0.0.9]: https://github.com/atshv/banan/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/atshv/banan/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/atshv/banan/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/atshv/banan/compare/v0.0.5...v0.0.6
