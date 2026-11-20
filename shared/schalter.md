@@ -16,9 +16,21 @@ Die meisten Regeln der Factory sind Anweisungen. Diese acht werden von einem Pro
 ## Freigaben
 Du gibst frei, indem du eine Nachricht schreibst, die nur daraus besteht.
 
-`Freigabe Brief` · `Freigabe Architektur` · `Freigabe Design` · `Freigabe Release`
+`Freigabe Brief` · `Freigabe Architektur` · `Freigabe Design` · `Freigabe Release` · in einem bestehenden Projekt auch `Freigabe Bestand`
 
 Ein Programm zeichnet das in `memory/freigaben/` auf, zusammen mit dem genauen Stand des Dokuments. Ändert sich das Dokument danach, gilt die Freigabe nicht mehr. Ein „ja“ im Chat oder eine Freigabe mit Zusatz („…, aber ändere noch X“) zählt nicht. Die Freigabe Release gilt für genau die Version in `VERSION`.
+
+## Bestehendes Projekt
+Zwei Angaben in `memory/gates.json` stellen die Schalter auf ein Projekt ein, das es schon gibt. `./install.sh <Ordner> <KI> bestand` setzt die erste, `factory-uebernehmen` trägt den Rest ein.
+
+| Angabe | Was sich ändert |
+|---|---|
+| `"modus": "bestand"` | Der erste Auftrag braucht die `Freigabe Bestand` für die Karte des Projekts (`memory/handoffs/00-bestand.md`). Der Plan braucht nur die `Freigabe Brief`, weil es Architektur und Design schon gibt. |
+| `"abschluss": "pr"` | Die KI öffnet Pull Requests. Mergen nach `main`, Tags und Veröffentlichen sind für sie gesperrt, auch mit Freigabe. Brief und Tasks schreibt der Orchestrator als ersten Commit auf den Task-Branch, danach ist die Taskliste dort gesperrt. |
+| `"wenn": {"native": ["src/core/", "*.cpp"]}` | Die Prüfung `native` läuft nur, wenn der Task solche Dateien ändert. Sonst wird sie als „nicht nötig“ aufgezeichnet. |
+| `"zaehlt_nicht": ["fixtures/", "*.snap"]` | Diese Dateien zählen nicht zur Grösse eines Tasks, z. B. erzeugte Dateien und Referenzbilder. |
+
+Ein Task-Branch ist jeder Branch, dessen Name nach einem `/` mit `T-<Nr>` weitergeht, also auch `feature/T-012-lasso`.
 
 ## Geschützt
 `.banan/`, die Hook-Dateien der KIs (`.claude/settings.json`, `.cursor/hooks.json`, `.gemini/settings.json`, `.codex/hooks.json`), `memory/runs/` und `memory/freigaben/` kann die KI weder mit den Schreib-Werkzeugen noch per Shell-Befehl ändern. `memory/gates.json` und `05-tasks.md` lassen sich nur auf `main` ändern, also nicht vom Builder.
@@ -47,7 +59,7 @@ Die Freigabe im Terminal geht bei jeder KI. Das Script läuft nur in einem echte
 
 Bei Codex musst du die Schalter einmal mit `/hooks` bestätigen, sonst laufen sie nicht.
 
-**Stand der Erprobung.** Die Schalter selbst sind mit 36 automatischen Tests geprüft, auch mit den Eingaben im Format von Cursor, Gemini und Codex. In den KIs selbst ist noch keine Anbindung gelaufen. Die Formate folgen der Doku von Codex und Gemini. Bei Cursor sind die Feldnamen der Eingabe nicht bestätigt.
+**Stand der Erprobung.** Die Schalter selbst sind mit 42 automatischen Tests geprüft, auch mit den Eingaben im Format von Cursor, Gemini und Codex. In den KIs selbst ist noch keine Anbindung gelaufen. Die Formate folgen der Doku von Codex und Gemini. Bei Cursor sind die Feldnamen der Eingabe nicht bestätigt.
 
 ## Grenzen
 Die Schalter sind kein Tresor. Sie prüfen die Schreib-Werkzeuge, `git commit`, `git tag` und Shell-Befehle, die geschützte Ordner nennen, aber nicht jeden denkbaren Umweg. Ein Befehl wie `npx shadcn add` kann Dateien ausserhalb des Bereichs anlegen. Das fängt der Reviewer. Welche Befehle und Pflicht-Prüfungen in `gates.json` stehen, legt der Orchestrator fest. Der Befehl steht in jedem aufgezeichneten Lauf, damit man ihn prüfen kann.

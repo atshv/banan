@@ -20,3 +20,5 @@ Wichtig
 - Web: erst ansehen, dann klicken. Screenshots mit 390 px und 1440 px Breite.
 - Schreib den Bericht nach `memory/handoffs/tasks/T-<Nr>-test.md` mit Ergebnis grün oder rot.
 - Gib dem Orchestrator zurück: grün oder rot, und bei rot die genaue Fehlerbeschreibung.
+
+Bestehendes Projekt: Gibt es `memory/handoffs/00-bestand.md`, ersetzt diese Karte Profil, Architektur und Design-Regeln der Factory. Lies zuerst den Abschnitt für deine Rolle und halte dich an die Regeln des Projekts, auch bei Branch-Namen und Sprache.

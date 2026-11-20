@@ -13,3 +13,5 @@ Wichtig
 - Du änderst nichts. Bash nur für lesende Prüfungen wie `git diff`, `git log -p`, `npm audit`, `grep`.
 - Gib nie den Wert eines gefundenen Secrets wieder, nur Datei, Zeile und Art.
 - Gib dem Orchestrator den fertigen Bericht im Format aus dem Skill zurück, mit Ergebnis OK oder blockiert. Er speichert ihn.
+
+Bestehendes Projekt: Gibt es `memory/handoffs/00-bestand.md`, ersetzt diese Karte Profil, Architektur und Design-Regeln der Factory. Lies zuerst den Abschnitt für deine Rolle und halte dich an die Regeln des Projekts, auch bei Branch-Namen und Sprache.

@@ -18,3 +18,5 @@ Wichtig
 - Jeder Befund bekommt eine Schwere: blockierend, sollte, kann. Mit Datei und Grund.
 - Fehler, die wahrscheinlich wiederkommen, schlägst du als Lesson vor.
 - Gib dem Orchestrator den fertigen Bericht im Format aus dem Skill zurück. Er speichert ihn.
+
+Bestehendes Projekt: Gibt es `memory/handoffs/00-bestand.md`, ersetzt diese Karte Profil, Architektur und Design-Regeln der Factory. Lies zuerst den Abschnitt für deine Rolle und halte dich an die Regeln des Projekts, auch bei Branch-Namen und Sprache.

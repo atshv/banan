@@ -20,3 +20,5 @@ Wichtig
 - Keine Secrets in Code oder Commits.
 - Schreib den Bericht nach `memory/handoffs/tasks/T-<Nr>-build.md` mit Versuchsnummer.
 - Gib dem Orchestrator zurück: Branch, geänderte Dateien, ob das Gate bestanden ist.
+
+Bestehendes Projekt: Gibt es `memory/handoffs/00-bestand.md`, ersetzt diese Karte Profil, Architektur und Design-Regeln der Factory. Lies zuerst den Abschnitt für deine Rolle und halte dich an die Regeln des Projekts, auch bei Branch-Namen und Sprache.
